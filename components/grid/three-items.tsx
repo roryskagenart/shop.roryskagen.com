@@ -47,7 +47,7 @@ function ThreeItemGridItem({
 
 export async function ThreeItemGrid({currency}: { currency: string}) {
   const homepageItems = await getCollectionProducts({
-    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'all',
+    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'fine-art-originals',
     currency,
   });
 

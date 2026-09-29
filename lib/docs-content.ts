@@ -82,6 +82,12 @@ export const DEV_DOCS_STRUCTURE: DocCategory[] = [
         slug: 'fourthwall-api',
         badge: 'Core',
         description: 'Storefront API vs Platform Open API, Bearer tokens, basic auth, and webhook secrets.'
+      },
+      {
+        title: 'Brand Propagation & Roadmap',
+        slug: 'brand-propagation',
+        badge: 'Step 1 & 2',
+        description: 'Brand propagation across domains (roryskagenart.com -> fourthwall -> shop), feature flags, and future release plan.'
       }
     ]
   },
@@ -1055,6 +1061,120 @@ npm run test:watch
 2. Package with Node.js 22 LTS container.
 3. Expose port 3000 (\`PORT=3000\`).
 4. Execute \`node .next/standalone/server.js\`.
+`
+  },
+
+  'dev/brand-propagation': {
+    slug: 'brand-propagation',
+    title: 'Brand Propagation & Future Releases Roadmap',
+    description: 'Design system propagation from roryskagenart.com -> roryskagenart.fourthwall.com -> shop.roryskagenart.com with feature flags and multi-phase roadmap.',
+    badge: 'Design System',
+    category: 'System & Architecture',
+    scope: 'dev',
+    lastUpdated: 'September 2026',
+    tableOfContents: [
+      { id: 'tri-domain-topology', title: 'Tri-Domain Architecture Topology', level: 2 },
+      { id: 'step-1-current-scope', title: 'Step 1: Low-Risk Visual Propagation (Current Scope)', level: 2 },
+      { id: 'feature-flag-architecture', title: 'Feature Flag Architecture (BRAND_CONFIG)', level: 2 },
+      { id: 'shadcn-and-tw-tokens', title: 'Shadcn & Tailwind Design Tokens', level: 2 },
+      { id: 'step-2-future-roadmap', title: 'Step 2: Future Release Features Plan', level: 2 }
+    ],
+    content: `
+## Tri-Domain Architecture Topology
+
+The Rory Skagen digital ecosystem spans three coordinated web surfaces that require visual harmony and congruent brand identity:
+
+1. **\`roryskagenart.com\`** (Main Artist Portfolio & CMS):
+   - Built with Next.js, Supabase PostgreSQL, and Tailwind CSS.
+   - Hosts full biographical records, mural maps, press archives, and studio narratives.
+2. **\`roryskagenart.fourthwall.com\`** (Fourthwall Hosted Creator Store):
+   - Fourthwall's direct multitenant hosted ecommerce platform.
+   - Handles merchant backend, physical fulfillment, customer support, and sales taxes.
+3. **\`shop.roryskagenart.com\`** (Custom Domain Production Storefront):
+   - This application — custom headless storefront powered by Next.js 15, Tailwind, and Fourthwall Storefront APIs.
+   - Provides an omnichannel experience linking back to the portfolio while facilitating checkout through Fourthwall.
+
+---
+
+## Step 1: Low-Risk Visual Propagation (Current Scope)
+
+The mandate for Step 1 is to achieve a **super basic, low-risk, congruent brand experience** with zero disruption to checkout flows or core ecommerce stability.
+
+### Assets & Visual Elements Propagated:
+- **Official Brand Icon:** Migrated from \`roryskagenart.com/android-chrome-192x192.png\` to \`/public/android-chrome-192x192.png\`. Used across the top navigation, mobile drawers, and footer brand lockup.
+- **Favicon Family:** Deployed \`favicon-32x32.png\`, \`favicon-16x16.png\`, \`apple-touch-icon.png\`, and \`site.webmanifest\` matching the studio portfolio exactly.
+- **Brand Typography Lockup:**
+  - Primary title: **"Rory Skagen Art"** (\`tracking-[0.18em] uppercase font-black font-serif\`).
+  - Studio metadata: **"Austin, Texas • Est. 1985"** (\`tracking-[0.22em] text-neutral-500 font-mono\`).
+- **Footer Attribution:** Direct reciprocal link to the \`roryskagenart.com\` portfolio, ensuring visitors can move between the fine art catalog and the studio's broader biography.
+
+---
+
+## Feature Flag Architecture (BRAND_CONFIG)
+
+To ensure this visual propagation is **100% reversible, non-breaking, and isolated**, all brand elements are governed by the centralized configuration in **\`lib/brand-config.ts\`**:
+
+\`\`\`ts
+// lib/brand-config.ts
+export const BRAND_CONFIG = {
+  name: 'Rory Skagen Art',
+  tagline: 'Austin, Texas • Est. 1985',
+  domains: {
+    portfolio: 'https://roryskagenart.com',
+    fourthwallHosted: 'https://roryskagenart.fourthwall.com',
+    shopCustomDomain: 'https://shop.roryskagenart.com'
+  },
+  features: {
+    // Controlled via NEXT_PUBLIC_FEATURE_BRAND_V1 env var (defaults to true)
+    brandExperienceV1: cleanEnv(process.env.NEXT_PUBLIC_FEATURE_BRAND_V1) !== 'false',
+
+    // Future feature flags (disabled in Step 1)
+    crossDomainSso: false,
+    omnichannelGlobalHeader: false,
+    realtimePaletteSync: false,
+    arRoomPreview: false
+  }
+};
+\`\`\`
+
+If \`NEXT_PUBLIC_FEATURE_BRAND_V1="false"\` is set, components seamlessly degrade to standard generic defaults with zero runtime exceptions.
+
+---
+
+## Shadcn & Tailwind Design Tokens
+
+The visual language follows the "Gallery Stone" (light) and "Charcoal Gallery" (dark) palettes established in \`roryskagenart.com/src/index.css\`:
+
+| Token | Light Mode ("Gallery Stone") | Dark Mode ("Charcoal Gallery") | Purpose |
+| :--- | :--- | :--- | :--- |
+| \`--background\` | \`#e3e1da\` | \`#17171b\` | Studio gallery canvas backdrop |
+| \`--card\` | \`#eeede8\` | \`#1d1d22\` | Product card and modal surfaces |
+| \`--foreground\` | \`#1c1c20\` | \`#f0f0f2\` | High-contrast editorial typography |
+| \`--border\` | \`#d2cfc6\` | \`#33333a\` | Hairline card and divider borders |
+| \`--line-strong\` | \`#3a3a40\` | \`#52525c\` | Structural dividers and active indicators |
+| \`--accent\` | \`#b45309\` (amber) | \`#f59e0b\` (amber) | Studio neon pop accents and badges |
+
+---
+
+## Step 2: Future Release Features Plan
+
+For upcoming releases beyond the basic visual propagation scope, the following capabilities have been planned and architected:
+
+### 1. Unified Omnichannel Header (Release v1.2.0)
+- **Goal:** Render identical header navigation across \`roryskagenart.com\` and \`shop.roryskagenart.com\` with cross-domain cart badge synchronization.
+- **Mechanism:** Cross-subdomain shared cookie (\`domain=.roryskagenart.com\`) tracking the active Fourthwall cart count so visitors on the portfolio site see their shopping cart counter update in real time.
+
+### 2. Cross-Domain Collector Single Sign-On (Release v1.3.0)
+- **Goal:** Unify portfolio user profiles with Fourthwall supporter accounts.
+- **Mechanism:** OAuth 2.0 / JWT session exchange allowing authenticated studio members to access exclusive print drops and view past Fourthwall orders within their portfolio profile.
+
+### 3. Real-Time Palette & CMS Synchronization (Release v1.4.0)
+- **Goal:** Allow the artist to update seasonal theme palettes (e.g. "Neon Sunset", "Atomic Sage") in the Supabase CMS and automatically update the Fourthwall storefront.
+- **Mechanism:** Supabase Database Webhook triggering Next.js on-demand revalidation to regenerate root CSS variables.
+
+### 4. Augmented Reality (AR) "View in Your Room" (Release v1.5.0)
+- **Goal:** Allow collectors to preview original enamel paintings and large-scale canvas pieces in 1:1 true scale on their own walls.
+- **Mechanism:** WebXR and Apple Quick Look (\`.usdz\`) models generated from high-resolution artwork aspect ratios and original dimensions.
 `
   }
 };

@@ -14,13 +14,21 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Rory Skagen Art Store',
-    template: '%s | Rory Skagen Art Store'
+    default: 'Rory Skagen Art | Official Studio Store',
+    template: '%s | Rory Skagen Art'
   },
-  description: 'High-performance ecommerce store built with Next.js, Vercel, and Fourthwall.',
+  description: 'Official Fourthwall fine art store for artist Rory Skagen. Archival museum-quality prints, gallery canvas, and pop art originals from Austin, Texas.',
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }]
+  },
+  manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Rory Skagen Art Store',
-    description: 'High-performance ecommerce store built with Next.js, Vercel, and Fourthwall.'
+    title: 'Rory Skagen Art | Official Studio Store',
+    description: 'Official Fourthwall fine art store for artist Rory Skagen. Archival museum-quality prints, gallery canvas, and pop art originals from Austin, Texas.'
   },
   robots: {
     follow: true,

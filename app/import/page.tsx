@@ -108,25 +108,36 @@ export default function ImportPage() {
       {/* Top Header */}
       <header className="border-b border-neutral-800 bg-neutral-900/60 backdrop-blur px-6 py-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/USD"
-                className="text-xs uppercase tracking-wider text-emerald-400 hover:underline"
-              >
-                ← Return to Storefront
-              </Link>
-              <span className="text-neutral-600">|</span>
-              <span className="rounded bg-emerald-950/80 px-2 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-800">
-                Catalog Synced
-              </span>
+          <div className="flex items-start gap-4">
+            <img
+              src="/android-chrome-192x192.png"
+              alt="Rory Skagen Art"
+              className="h-12 w-12 rounded-lg border border-neutral-700 bg-neutral-800 object-cover mt-1 flex-shrink-0"
+            />
+            <div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/USD"
+                  className="text-xs uppercase tracking-wider text-emerald-400 hover:underline"
+                >
+                  ← Return to Storefront
+                </Link>
+                <span className="text-neutral-600">|</span>
+                <span className="rounded bg-emerald-950/80 px-2 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-800">
+                  Catalog Synced
+                </span>
+                <span className="text-neutral-600">|</span>
+                <span className="text-xs font-mono text-neutral-400">
+                  Austin, Texas • Est. 1985
+                </span>
+              </div>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">
+                Rory Skagen Art → Fourthwall API Importer
+              </h1>
+              <p className="mt-1 text-sm text-neutral-400">
+                Imported 137 authentic fine art pieces from <code className="text-neutral-300">jadenblack/roryskagenart.com</code> into your Fourthwall store.
+              </p>
             </div>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
-              Rory Skagen Art → Fourthwall API Importer
-            </h1>
-            <p className="mt-1 text-sm text-neutral-400">
-              Imported 137 authentic fine art pieces from <code className="text-neutral-300">jadenblack/roryskagenart.com</code> into your Fourthwall store.
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

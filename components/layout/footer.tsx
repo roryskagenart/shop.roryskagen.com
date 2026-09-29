@@ -1,32 +1,37 @@
 import Link from 'next/link';
 
 import LogoSquare from 'components/logo-square';
-
-const { COMPANY_NAME, SITE_NAME } = process.env;
+import { BRAND_CONFIG } from 'lib/brand-config';
 
 export default async function Footer() {
   const currentYear = new Date().getFullYear();
-  const copyrightDate = 2023 + (currentYear > 2023 ? `-${currentYear}` : '');
-  const copyrightName = COMPANY_NAME || SITE_NAME || '';
+  const copyrightDate = 1985 + (currentYear > 1985 ? `-${currentYear}` : '');
 
   return (
     <footer className="text-sm text-neutral-500 dark:text-neutral-400">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 border-t border-neutral-200 px-6 py-12 text-sm md:flex-row md:gap-12 md:px-4 min-[1320px]:px-0 dark:border-neutral-700">
         <div>
-          <Link className="flex items-center gap-2 text-black md:pt-1 dark:text-white" href="/">
+          <Link className="flex items-center gap-3 text-black md:pt-1 dark:text-white group" href="/">
             <LogoSquare size="sm" />
-            <span className="uppercase">{SITE_NAME}</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold tracking-[0.16em] uppercase leading-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                {BRAND_CONFIG.name}
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.2em] text-neutral-500 font-mono">
+                {BRAND_CONFIG.tagline}
+              </span>
+            </div>
           </Link>
         </div>
-        <div className="md:ml-auto">
+        <div className="md:ml-auto flex items-center gap-3">
           <a
-            className="flex h-8 w-max flex-none items-center justify-center rounded-md border border-neutral-200 bg-white text-xs text-black dark:border-neutral-700 dark:bg-black dark:text-white"
-            aria-label="Deploy on Vercel"
-            href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFourthwallHQ%2Fvercel-commerce"
+            className="flex h-8 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 text-xs font-medium text-black hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 transition"
+            href={BRAND_CONFIG.domains.portfolio}
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            <span className="px-3">▲</span>
-            <hr className="h-full border-r border-neutral-200 dark:border-neutral-700" />
-            <span className="px-3">Deploy</span>
+            <span>roryskagenart.com Portfolio</span>
+            <span className="text-[10px] text-neutral-400">↗</span>
           </a>
         </div>
       </div>
@@ -66,8 +71,7 @@ export default async function Footer() {
       <div className="border-t border-neutral-200 py-6 text-sm dark:border-neutral-700">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-1 px-4 md:flex-row md:gap-0 md:px-4 min-[1320px]:px-0">
           <p>
-            &copy; {copyrightDate} {copyrightName}
-            {copyrightName.length && !copyrightName.endsWith('.') ? '.' : ''} All rights reserved.
+            &copy; {copyrightDate} {BRAND_CONFIG.legalName}. All rights reserved.
           </p>
           <hr className="mx-4 hidden h-4 w-[1px] border-l border-neutral-400 md:inline-block" />
           <p>

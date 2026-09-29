@@ -1,5 +1,6 @@
 'use client';
 
+import { BRAND_CONFIG } from 'lib/brand-config';
 import {
   DEV_DOCS_STRUCTURE,
   DocCategory,
@@ -68,14 +69,21 @@ export function DocsLayout({
               </svg>
             </button>
 
-            <Link href="/USD" className="flex items-center gap-2.5 font-bold tracking-tight text-white hover:opacity-90">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 font-extrabold text-black text-xs">
-                RS
-              </span>
-              <span className="hidden sm:inline-block text-sm uppercase tracking-wider font-semibold">
-                Rory Skagen Art
-              </span>
-              <span className="rounded bg-neutral-800 px-2 py-0.5 text-[11px] font-medium text-neutral-400 border border-neutral-700">
+            <Link href="/USD" className="flex items-center gap-2.5 font-bold tracking-tight text-white hover:opacity-90 group">
+              <img
+                src={BRAND_CONFIG.assets.icon192}
+                alt={BRAND_CONFIG.name}
+                className="h-7 w-7 rounded-md object-cover border border-neutral-700 transition-transform group-hover:scale-105"
+              />
+              <div className="flex flex-col">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-white leading-tight">
+                  {BRAND_CONFIG.name}
+                </span>
+                <span className="hidden sm:inline-block text-[8px] uppercase tracking-[0.2em] text-neutral-500 font-mono">
+                  {BRAND_CONFIG.tagline}
+                </span>
+              </div>
+              <span className="rounded bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 border border-neutral-700 ml-1">
                 Docs
               </span>
             </Link>

@@ -1,0 +1,602 @@
+[
+  {
+    "id": "rs-original-greetings-from-austin",
+    "slug": "greetings-from-austin",
+    "title": "Greetings from Austin (Original Master Study)",
+    "originalTitle": "Greetings from Austin",
+    "priceUSD": 28000,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2015",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/GreetingsfromAustin.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/GreetingsfromAustin.jpg",
+      "width": 576,
+      "height": 376,
+      "altText": "Greetings from Austin by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-greetings-from-austin-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 28000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-greetings-from-austin-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 29200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-austin-2019",
+    "slug": "austin-2019",
+    "title": "Austin Skyline 2019 (Original)",
+    "originalTitle": "Austin Skyline 2019",
+    "priceUSD": 24000,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2019",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austin2019-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austin2019-copy.jpg",
+      "width": 2100,
+      "height": 1467,
+      "altText": "Austin Skyline 2019 by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-austin-2019-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 24000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-austin-2019-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 25200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-greetings-from-texas",
+    "slug": "greetings-from-texas",
+    "title": "Greetings from Texas (Original Master Study)",
+    "originalTitle": "Greetings from Texas",
+    "priceUSD": 19500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2018",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/GreetingsfromTexas.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/GreetingsfromTexas.jpg",
+      "width": 576,
+      "height": 403,
+      "altText": "Greetings from Texas by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-greetings-from-texas-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 19500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-greetings-from-texas-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 20700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-gianondor",
+    "slug": "gianondor",
+    "title": "Gianondor (Original Kaiju Masterwork)",
+    "originalTitle": "Gianondor",
+    "priceUSD": 18500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2019",
+    "series": "Monsters & Kaiju",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/gianondor.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/gianondor.jpg",
+      "width": 2100,
+      "height": 1469,
+      "altText": "Gianondor by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "monsters-kaiju"
+    ],
+    "variants": [
+      {
+        "id": "var-gianondor-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 18500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-gianondor-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 19700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-empopatya",
+    "slug": "empopatya",
+    "title": "Empopatya (Original Kaiju Masterwork)",
+    "originalTitle": "Empopatya",
+    "priceUSD": 16000,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2019",
+    "series": "Monsters & Kaiju",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076995/empopatya.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076995/empopatya.jpg",
+      "width": 2100,
+      "height": 1474,
+      "altText": "Empopatya by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "monsters-kaiju"
+    ],
+    "variants": [
+      {
+        "id": "var-empopatya-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 16000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-empopatya-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 17200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-cyborg-robots-and-aliens",
+    "slug": "cyborg-robots-and-aliens",
+    "title": "Cyborg: Robots and Aliens (Original)",
+    "originalTitle": "Cyborg: Robots and Aliens",
+    "priceUSD": 15000,
+    "medium": "Acrylic & Enamel on Steel",
+    "dimensions": "3ft x 5ft (36\" x 60\")",
+    "year": "2017",
+    "series": "Atomic Pop & Sci-Fi",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Acrylic & Enamel on Steel, measuring 3ft x 5ft (36\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077004/robot-copy-1.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077004/robot-copy-1.jpg",
+      "width": 1050,
+      "height": 734,
+      "altText": "Cyborg: Robots and Aliens by Rory Skagen - Acrylic"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "atomic-pop-sci-fi"
+    ],
+    "variants": [
+      {
+        "id": "var-cyborg-robots-and-aliens-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 15000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-cyborg-robots-and-aliens-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 16200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-the-persistence-of-cats",
+    "slug": "the-persistence-of-cats",
+    "title": "The Persistence of Cats (Original)",
+    "originalTitle": "The Persistence of Cats",
+    "priceUSD": 14500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "33in x 4ft (33\" x 48\")",
+    "year": "2018",
+    "series": "Pop Surrealism & Folklore",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 33in x 4ft (33\" x 48\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076989/2019cats-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076989/2019cats-copy.jpg",
+      "width": 2100,
+      "height": 1440,
+      "altText": "The Persistence of Cats by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "pop-surrealism-folklore"
+    ],
+    "variants": [
+      {
+        "id": "var-the-persistence-of-cats-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 14500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-the-persistence-of-cats-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 15700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-arachforun",
+    "slug": "arachforun",
+    "title": "Arachforun (Original Kaiju Masterwork)",
+    "originalTitle": "Arachforun",
+    "priceUSD": 14000,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2019",
+    "series": "Monsters & Kaiju",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077005/rothmonster-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077005/rothmonster-copy.jpg",
+      "width": 1050,
+      "height": 735,
+      "altText": "Arachforun by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "monsters-kaiju"
+    ],
+    "variants": [
+      {
+        "id": "var-arachforun-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 14000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-arachforun-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 15200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-austin-postcard",
+    "slug": "austin-postcard",
+    "title": "Austin Postcard (Original Vintage Study)",
+    "originalTitle": "Austin Postcard",
+    "priceUSD": 13500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2016",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austinpostcard.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austinpostcard.jpg",
+      "width": 576,
+      "height": 403,
+      "altText": "Austin Postcard by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-austin-postcard-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 13500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-austin-postcard-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 14700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-gaurdon",
+    "slug": "gaurdon",
+    "title": "Gaurdon (Original Monster Portrait)",
+    "originalTitle": "Gaurdon",
+    "priceUSD": 12500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "33in x 4ft (33\" x 48\")",
+    "year": "2019",
+    "series": "Monsters & Kaiju",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 33in x 4ft (33\" x 48\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/gaurdon.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/gaurdon.jpg",
+      "width": 2100,
+      "height": 1444,
+      "altText": "Gaurdon by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "monsters-kaiju"
+    ],
+    "variants": [
+      {
+        "id": "var-gaurdon-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 12500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-gaurdon-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 13700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-78704",
+    "slug": "78704",
+    "title": "Austin 78704 South Austin Zip (Original)",
+    "originalTitle": "Austin 78704 (South Austin Zip)",
+    "priceUSD": 11000,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3.5ft x 5ft (42\" x 60\")",
+    "year": "2018",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3.5ft x 5ft (42\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076989/78704.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076989/78704.jpg",
+      "width": 576,
+      "height": 402,
+      "altText": "Austin 78704 (South Austin Zip) by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-78704-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 11000,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-78704-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 12200,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-the-greeting-card-machine",
+    "slug": "the-greeting-card-machine",
+    "title": "The Greeting Card Machine (Original)",
+    "originalTitle": "The Greeting Card Machine",
+    "priceUSD": 10500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3ft x 5ft (36\" x 60\")",
+    "year": "2017",
+    "series": "Pop Surrealism & Folklore",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3ft x 5ft (36\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/greetingcardmachine-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076996/greetingcardmachine-copy.jpg",
+      "width": 1050,
+      "height": 791,
+      "altText": "The Greeting Card Machine by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "pop-surrealism-folklore"
+    ],
+    "variants": [
+      {
+        "id": "var-the-greeting-card-machine-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 10500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-the-greeting-card-machine-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 11700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-the-martian",
+    "slug": "the-martian",
+    "title": "The Martian (Original Atomic Portrait)",
+    "originalTitle": "The Martian",
+    "priceUSD": 9500,
+    "medium": "Acrylic & Enamel on Steel",
+    "dimensions": "3ft x 5ft (36\" x 60\")",
+    "year": "2018",
+    "series": "Atomic Pop & Sci-Fi",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Acrylic & Enamel on Steel, measuring 3ft x 5ft (36\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077009/themartian1-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077009/themartian1-copy.jpg",
+      "width": 2100,
+      "height": 1519,
+      "altText": "The Martian by Rory Skagen - Acrylic"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "atomic-pop-sci-fi"
+    ],
+    "variants": [
+      {
+        "id": "var-the-martian-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 9500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-the-martian-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 10700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-an-insincere-call",
+    "slug": "an-insincere-call",
+    "title": "An Insincere Call (Original)",
+    "originalTitle": "An Insincere Call",
+    "priceUSD": 8500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "3ft x 4ft (36\" x 48\")",
+    "year": "2016",
+    "series": "Pop Surrealism & Folklore",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 3ft x 4ft (36\" x 48\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077005/sound-of-the-WB-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787077005/sound-of-the-WB-copy.jpg",
+      "width": 670,
+      "height": 528,
+      "altText": "An Insincere Call by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "pop-surrealism-folklore"
+    ],
+    "variants": [
+      {
+        "id": "var-an-insincere-call-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 8500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-an-insincere-call-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 9700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  },
+  {
+    "id": "rs-original-austin-camouflage",
+    "slug": "austin-camouflage",
+    "title": "Austin Camouflage (Original Panoramic)",
+    "originalTitle": "Austin Camouflage",
+    "priceUSD": 5500,
+    "medium": "Enamel on Steel Plate",
+    "dimensions": "22in x 5ft (22\" x 60\")",
+    "year": "2017",
+    "series": "Austin Iconic & Texas Pop",
+    "status": "Available for Acquisition",
+    "provenance": "Direct from Rory Skagen Studio Archive, Austin TX. Accompanied by a hand-signed Certificate of Authenticity, custom museum wooden freight crate, and signed artist bill of sale.",
+    "description": "Original 1-of-1 fine art masterwork by Austin pop art legend Rory Skagen. Executed in industrial Enamel on Steel Plate, measuring 22in x 5ft (22\" x 60\"). Finished with museum-grade UV protective clearcoat for multi-generational permanence. Freight delivery in reinforced wooden crate included.",
+    "image": {
+      "url": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austin-Recovered-copy.jpg",
+      "transformedUrl": "https://res.cloudinary.com/xjilp2pq/image/upload/v1787076990/austin-Recovered-copy.jpg",
+      "width": 1050,
+      "height": 735,
+      "altText": "Austin Camouflage by Rory Skagen - Enamel"
+    },
+    "collections": [
+      "fine-art-originals",
+      "all",
+      "austin-iconic-texas-pop"
+    ],
+    "variants": [
+      {
+        "id": "var-austin-camouflage-orig",
+        "name": "Original (Ready to Hang / Industrial Cleat)",
+        "price": 5500,
+        "description": "Original enamel on steel with heavy-duty French cleat hanging system."
+      },
+      {
+        "id": "var-austin-camouflage-framed",
+        "name": "Original + Custom Matte Black Floating Steel Frame",
+        "price": 6700,
+        "description": "Original masterwork hand-mounted in a custom welded matte black steel floating frame."
+      }
+    ]
+  }
+]

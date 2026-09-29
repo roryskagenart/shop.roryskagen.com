@@ -1,9 +1,42 @@
+import { PRODUCT_COLLECTIONS } from "lib/taxonomy";
 import { Cart, Collection, Product } from "lib/types";
 import { cleanEnv } from "lib/utils";
 import { RoryArtwork } from "./importer";
+import originalsData from "./originals-data.json";
 import { reshapeCart, reshapeProduct, reshapeProducts } from "./reshape";
 import roryArtworksData from "./rory-artworks-data.json";
 import { FourthwallCart, FourthwallCollection, FourthwallOgImageResponse, FourthwallProduct, FourthwallShop } from "./types";
+
+export interface RoryOriginal {
+  id: string;
+  slug: string;
+  title: string;
+  originalTitle: string;
+  priceUSD: number;
+  medium: string;
+  dimensions: string;
+  year: string;
+  series: string;
+  status: string;
+  provenance: string;
+  description: string;
+  image: {
+    url: string;
+    transformedUrl: string;
+    width: number;
+    height: number;
+    altText: string;
+  };
+  collections: string[];
+  variants: {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+  }[];
+}
+
+const ORIGINALS: RoryOriginal[] = originalsData as RoryOriginal[];
 
 function getBaseApiUrl(): string {
   let url = cleanEnv(process.env.NEXT_PUBLIC_FW_API_URL) || 'https://storefront-api.fourthwall.com/v1';
@@ -130,38 +163,106 @@ const MOCK_SHOP: FourthwallShop = {
 
 const MOCK_COLLECTIONS: Collection[] = [
   {
+    handle: 'fine-art-originals',
+    title: 'Fine Art Originals ($4k–$28k)',
+    description: 'Fifteen authentic 1-of-1 original enamel-on-steel masterworks by Rory Skagen. Certified studio provenance and museum freight crating included.'
+  },
+  {
+    handle: 'b2b-corporate-gifts',
+    title: 'B2B & Corporate Gifting',
+    description: 'Turnkey Austin executive welcome boxes, tech relocation kits, VIP speaker tokens, and event planner suites.'
+  },
+  {
+    handle: 'metal-litho',
+    title: 'Metal Lithos & Enamel Steel',
+    description: 'Heavyweight aluminum lithographs and laser-cut steel plates capturing the industrial sheen of Rory’s original paintings.'
+  },
+  {
+    handle: 'canvas-prints',
+    title: 'Museum Canvas & Archival Prints',
+    description: 'Archival Giclée matte rag editions and gallery-wrapped stretched canvas printed with 12-color pigment inks.'
+  },
+  {
+    handle: 'desk-art',
+    title: 'Desk Art & Executive Objects',
+    description: 'Heavy optical lucite blocks, sandstone coaster sets, and architectural desktop metal sculptures.'
+  },
+  {
+    handle: 'kitsch-cpg',
+    title: 'Kitsch, CPG & Austin Living',
+    description: 'Retro ceramic diner coffee mugs, collectible enamel pins, barware, and weatherproof vinyl stickers.'
+  },
+  {
+    handle: 'apparel',
+    title: 'Studio Wear & Graphic Tees',
+    description: 'Heavyweight vintage-wash cotton tees, atomic hoodies, and retro embroidered trucker caps.'
+  },
+  {
     handle: 'all',
-    title: 'All Fine Art Pieces (137 Works)',
-    description: 'Browse the complete Rory Skagen studio catalog, spanning enamel masterworks, iconic murals, retro-futurism, and pop surrealism.'
-  },
-  {
-    handle: 'launch',
-    title: 'Featured Masterworks',
-    description: 'Iconic flagship pieces including Greetings From Austin, Austin Skyline, and landmark pop art originals.'
-  },
-  {
-    handle: 'austin-iconic',
-    title: 'Austin Iconic & Texas Pop',
-    description: 'World-famous Austin murals, Texas pop culture ephemera, and landmark Austin typography.'
-  },
-  {
-    handle: 'monsters-kaiju',
-    title: 'Monsters & Kaiju',
-    description: 'Vibrant pop-surrealist creature paintings, giant kaiju confrontations, and comic-style creature masterworks.'
-  },
-  {
-    handle: 'pop-surrealism',
-    title: 'Pop Surrealism & Folklore',
-    description: 'Mid-century neo-retro paintings, roadside Americana, and eccentric pop surrealism.'
-  },
-  {
-    handle: 'atomic-sci-fi',
-    title: 'Atomic Pop & Sci-Fi',
-    description: 'Mid-century space age optimism, retro robots, alien visitors, and atomic futurism.'
+    title: 'Complete Studio Catalog (137 Works)',
+    description: 'Browse the entire Rory Skagen studio archive spanning originals, prints, murals, and kaiju masterworks.'
   }
 ];
 
 const RORY_ARTWORKS: RoryArtwork[] = roryArtworksData as RoryArtwork[];
+
+function buildOriginalProduct(raw: RoryOriginal, currency = 'USD'): FourthwallProduct {
+  const currencyRates: Record<string, number> = {
+    USD: 1,
+    EUR: 0.92,
+    GBP: 0.79,
+    CAD: 1.36,
+    AUD: 1.52
+  };
+  const rate = currencyRates[currency] || 1;
+
+  const imageObj = {
+    id: `${raw.id}-img`,
+    url: raw.image.url,
+    transformedUrl: raw.image.transformedUrl,
+    width: raw.image.width || 1200,
+    height: raw.image.height || 800
+  };
+
+  const variants = raw.variants.map((v, idx) => {
+    const rawVal = Math.round(v.price * rate * 100) / 100;
+    return {
+      id: v.id,
+      name: v.name,
+      sku: `ORIG-${raw.slug.substring(0, 8).toUpperCase()}-${idx}`,
+      unitPrice: {
+        value: rawVal,
+        currency
+      },
+      images: [imageObj],
+      stock: {
+        type: 'UNLIMITED' as const
+      },
+      attributes: {
+        description: v.description,
+        edition: '1-of-1 Original Masterwork',
+        medium: raw.medium,
+        dimensions: raw.dimensions,
+        size: { name: v.name }
+      },
+      product: {
+        id: raw.id,
+        slug: raw.slug,
+        name: raw.title
+      }
+    };
+  });
+
+  return {
+    id: raw.id,
+    name: raw.title,
+    slug: raw.slug,
+    description: `${raw.description}\n\n**Authenticity & Delivery:**\n- Certified 1-of-1 Original Enamel Artwork\n- Hand-signed Certificate of Authenticity (CoA)\n- Heavy-duty French cleat hanging hardware pre-installed\n- Insured freight delivery in custom wooden crate included`,
+    images: [imageObj],
+    variants,
+    updatedAt: new Date().toISOString()
+  };
+}
 
 function buildRoryProduct(raw: RoryArtwork, currency = 'USD'): FourthwallProduct {
   const currencyRates: Record<string, number> = {
@@ -257,7 +358,7 @@ export async function getCollectionProducts({
   currency: string;
   limit?: number;
 }): Promise<Product[]> {
-  const normCollection = (collection || 'all').toLowerCase();
+  const normCollection = (collection || 'fine-art-originals').toLowerCase();
 
   try {
     const res = await fourthwallGet<{ results: FourthwallProduct[] }>(
@@ -273,17 +374,42 @@ export async function getCollectionProducts({
     // Fall back to catalog artworks
   }
 
-  // Filter artworks by collection
-  const matching = RORY_ARTWORKS.filter((p) => {
-    if (normCollection === 'all') return true;
-    return p.collections.some((c) => c.toLowerCase() === normCollection);
-  });
+  // 1. If requesting the Premier Studio Collection "fine-art-originals", or default "launch" or empty
+  if (normCollection === 'fine-art-originals' || normCollection === 'launch' || normCollection === '') {
+    const list = limit ? ORIGINALS.slice(0, limit) : ORIGINALS;
+    return reshapeProducts(list.map((o) => buildOriginalProduct(o, currency)));
+  }
 
-  const rawList = matching.length > 0 ? matching : RORY_ARTWORKS;
-  const sliced = limit ? rawList.slice(0, limit) : rawList;
-  const fourthwallProducts = sliced.map((p) => buildRoryProduct(p, currency));
+  // 2. If requesting "all"
+  if (normCollection === 'all') {
+    const originalProds = ORIGINALS.map((o) => buildOriginalProduct(o, currency));
+    const artworkProds = RORY_ARTWORKS.map((p) => buildRoryProduct(p, currency));
+    const combined = [...originalProds, ...artworkProds];
+    const sliced = limit ? combined.slice(0, limit) : combined;
+    return reshapeProducts(sliced);
+  }
 
-  return reshapeProducts(fourthwallProducts);
+  // 3. Check if matching originals belong to this collection handle
+  const matchingOriginals = ORIGINALS.filter((o) =>
+    o.collections.some((c) => c.toLowerCase() === normCollection)
+  );
+
+  // 4. Check if matching artworks belong to this collection handle
+  const matchingArtworks = RORY_ARTWORKS.filter((p) =>
+    p.collections.some((c) => c.toLowerCase() === normCollection)
+  );
+
+  if (matchingOriginals.length > 0 || matchingArtworks.length > 0) {
+    const originalProds = matchingOriginals.map((o) => buildOriginalProduct(o, currency));
+    const artworkProds = matchingArtworks.map((p) => buildRoryProduct(p, currency));
+    const combined = [...originalProds, ...artworkProds];
+    const sliced = limit ? combined.slice(0, limit) : combined;
+    return reshapeProducts(sliced);
+  }
+
+  // Fallback to the 15 originals
+  const defaultList = limit ? ORIGINALS.slice(0, limit) : ORIGINALS;
+  return reshapeProducts(defaultList.map((o) => buildOriginalProduct(o, currency)));
 }
 
 /**
@@ -306,7 +432,14 @@ export async function getProduct({ handle, currency = 'USD' }: { handle: string;
     }
   }
 
-  const found = RORY_ARTWORKS.find((p) => p.slug === handle);
+  // Check in 15 Fine Art Originals first!
+  const foundOriginal = ORIGINALS.find((o) => o.slug === handle || o.id === handle);
+  if (foundOriginal) {
+    return reshapeProduct(buildOriginalProduct(foundOriginal, currency));
+  }
+
+  // Check in general archive
+  const found = RORY_ARTWORKS.find((p) => p.slug === handle || p.id === handle);
   if (!found) {
     return undefined;
   }
@@ -385,12 +518,26 @@ export async function addToCart(
 
     for (const line of lines) {
       let matchedVariant: any = null;
-      for (const p of RORY_ARTWORKS) {
-        const prod = buildRoryProduct(p, 'USD');
-        const v = prod.variants.find(item => item.id === line.merchandiseId);
+
+      // 1. Check in 15 Originals
+      for (const orig of ORIGINALS) {
+        const prod = buildOriginalProduct(orig, 'USD');
+        const v = prod.variants.find((item) => item.id === line.merchandiseId);
         if (v) {
           matchedVariant = v;
           break;
+        }
+      }
+
+      // 2. Check in standard archive
+      if (!matchedVariant) {
+        for (const p of RORY_ARTWORKS) {
+          const prod = buildRoryProduct(p, 'USD');
+          const v = prod.variants.find((item) => item.id === line.merchandiseId);
+          if (v) {
+            matchedVariant = v;
+            break;
+          }
         }
       }
 

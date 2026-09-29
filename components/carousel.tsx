@@ -6,7 +6,7 @@ import { GridTileImage } from './grid/tile';
 export async function Carousel({currency}: {currency: string}) {
   // Collections that start with `hidden-*` are hidden from the search page.
   const products = await getCollectionProducts({
-    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'all',
+    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'fine-art-originals',
     currency,
   });
 
