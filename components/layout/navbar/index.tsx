@@ -17,18 +17,18 @@ export async function Navbar({currency}: {currency: string}) {
             className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
           >
             <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
-              Launch on Fourthwall!
+            <div className="ml-2 flex-none text-sm font-bold uppercase tracking-wider text-black dark:text-white md:hidden lg:block">
+              Rory Skagen Art
             </div>
           </Link>
           {collections.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
+            <ul className="hidden gap-5 text-xs font-medium md:flex md:items-center">
               {collections.map((item) => (
                 <li key={item.title}>
                   <Link
                     href={`/${currency}/collections/${item.handle}`}
                     prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-200"
                   >
                     {item.title}
                   </Link>
@@ -39,7 +39,19 @@ export async function Navbar({currency}: {currency: string}) {
         </div>
         <div className="hidden justify-center md:flex md:w-1/3">
         </div>
-        <div className="flex justify-end md:w-1/3 gap-4">
+        <div className="flex justify-end items-center md:w-1/3 gap-3">
+          <Link
+            href="/docs"
+            className="hidden sm:inline-block text-xs font-semibold text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
+          >
+            Docs
+          </Link>
+          <Link
+            href="/docs/dev"
+            className="hidden sm:inline-block text-xs font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+          >
+            Dev/Build
+          </Link>
           <CurrencySelector currency={currency} />
           <CartModal />
         </div>

@@ -45,11 +45,20 @@ export default async function Footer() {
             <Link href="/pages/contact" className="hover:text-black dark:hover:text-white">
               Contact
             </Link>
+            <Link href="/docs" className="hover:text-black dark:hover:text-white">
+              Public Docs
+            </Link>
+            <Link href="/docs/dev" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
+              Dev/Build Docs
+            </Link>
+            <Link href="/import" className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
+              Fourthwall API Sync
+            </Link>
           </div>
           <hr className="mx-4 hidden h-4 w-[1px] border-l border-neutral-400 md:inline-block" />
           <p className="md:ml-auto">
-            <a href="https://fourthwall.com" className="text-black dark:text-white">
-              Created by Fourthwall
+            <a href="https://shop.roryskagen.com" className="text-black dark:text-white">
+              Rory Skagen Studio Archive
             </a>
           </p>
         </div>
