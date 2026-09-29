@@ -1,0 +1,6 @@
+{
+  "name": "Rory Skagen Art Store",
+  "description": "High-performance ecommerce store built with Next.js, Vercel, and Fourthwall.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

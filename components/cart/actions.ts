@@ -2,18 +2,19 @@
 
 import { TAGS } from 'lib/constants';
 import { addToCart, createCart, getCart, getCheckoutUrl, removeFromCart, updateCart } from 'lib/fourthwall';
+import { cleanEnv } from 'lib/utils';
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export async function getCartId(): Promise<string | undefined> {
-  const tokenHash = (process.env.NEXT_PUBLIC_FW_STOREFRONT_TOKEN || '').trim();
+  const tokenHash = cleanEnv(process.env.NEXT_PUBLIC_FW_STOREFRONT_TOKEN) || 'default';
   const cookieStore = await cookies();
   return cookieStore.get(`${tokenHash}/cartId`)?.value;
 }
 
 async function setCartId(cartId: string) {
-  const tokenHash = (process.env.NEXT_PUBLIC_FW_STOREFRONT_TOKEN || '').trim();
+  const tokenHash = cleanEnv(process.env.NEXT_PUBLIC_FW_STOREFRONT_TOKEN) || 'default';
   const cookieStore = await cookies();
   cookieStore.set(`${tokenHash}/cartId`, cartId);
 }
@@ -28,7 +29,7 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
     }
 
     await addToCart(cartId, [{ merchandiseId: selectedVariantId, quantity: 1 }]);
-    revalidateTag(TAGS.cart, { expire: 60 });
+    revalidateTag(TAGS.cart, 'default');
   } catch (e) {
     return 'Error adding item to cart';
   }
@@ -47,7 +48,7 @@ export async function removeItem(prevState: any, merchandiseId: string) {
 
     if (lineItem && lineItem.id) {
       await removeFromCart(cartId, [lineItem.id]);
-      revalidateTag(TAGS.cart, {});
+      revalidateTag(TAGS.cart, 'default');
     } else {
       return 'Item not found in cart';
     }
@@ -92,7 +93,7 @@ export async function updateItemQuantity(
       await addToCart(cartId, [{ merchandiseId, quantity }]);
     }
 
-    revalidateTag(TAGS.cart, { });
+    revalidateTag(TAGS.cart, 'default');
   } catch (e) {
     console.error(e);
     return 'Error updating item quantity';

@@ -17,6 +17,8 @@ export interface GA4EcommerceEvent {
   shopId?: string;
 }
 
+import { cleanEnv } from './utils';
+
 // Declare dataLayer on window object for TypeScript
 declare global {
   interface Window {
@@ -25,7 +27,7 @@ declare global {
 }
 
 // Get GTM Container ID from environment variable with fallback
-export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-PV2BBNN';
+export const GTM_ID = cleanEnv(process.env.NEXT_PUBLIC_GTM_ID) || 'GTM-PV2BBNN';
 
 /**
  * Push event to dataLayer for GTM

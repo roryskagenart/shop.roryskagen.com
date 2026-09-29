@@ -1,11 +1,12 @@
 import { getCollectionProducts } from 'lib/fourthwall';
+import { cleanEnv } from 'lib/utils';
 import Link from 'next/link';
 import { GridTileImage } from './grid/tile';
 
 export async function Carousel({currency}: {currency: string}) {
   // Collections that start with `hidden-*` are hidden from the search page.
   const products = await getCollectionProducts({
-    collection: process.env.NEXT_PUBLIC_FW_COLLECTION || 'all',
+    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'all',
     currency,
   });
 

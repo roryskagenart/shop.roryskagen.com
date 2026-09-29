@@ -1,22 +1,26 @@
 import { GeistSans } from 'geist/font/sans';
 import { GTM_ID } from 'lib/analytics';
 import { getAnalyticsConfig } from 'lib/fourthwall';
-import { ensureStartsWith } from 'lib/utils';
+import { ensureStartsWith, getBaseUrl } from 'lib/utils';
 import Script from 'next/script';
 import { ReactNode } from 'react';
 import './globals.css';
 
 const { TWITTER_CREATOR, TWITTER_SITE, SITE_NAME } = process.env;
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  : 'http://localhost:3000';
+const baseUrl = getBaseUrl();
 const twitterCreator = TWITTER_CREATOR ? ensureStartsWith(TWITTER_CREATOR, '@') : undefined;
 const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : undefined;
 
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Store'
+    default: 'Rory Skagen Art Store',
+    template: '%s | Rory Skagen Art Store'
+  },
+  description: 'High-performance ecommerce store built with Next.js, Vercel, and Fourthwall.',
+  openGraph: {
+    title: 'Rory Skagen Art Store',
+    description: 'High-performance ecommerce store built with Next.js, Vercel, and Fourthwall.'
   },
   robots: {
     follow: true,

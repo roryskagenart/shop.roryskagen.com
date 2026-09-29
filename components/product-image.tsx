@@ -1,7 +1,8 @@
 import clsx from 'clsx';
+import { cleanEnv } from 'lib/utils';
 import Image from 'next/image';
 
-const useFourthwallImages = process.env.NEXT_PUBLIC_USE_FW_IMAGE_OPTIMIZATION === 'true';
+const useFourthwallImages = cleanEnv(process.env.NEXT_PUBLIC_USE_FW_IMAGE_OPTIMIZATION) === 'true';
 
 type ProductImageProps = {
   src: string;
