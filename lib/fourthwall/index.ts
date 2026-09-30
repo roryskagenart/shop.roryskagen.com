@@ -83,25 +83,35 @@ async function fourthwallGet<T>(
   constructedUrl.searchParams.append('storefront_token', STOREFRONT_TOKEN);
 
   const { next, ...fetchOptions } = options;
-  const result = await fetch(
-    constructedUrl.toString(),
-    {
-      method: 'GET',
-      ...fetchOptions,
-      headers: {
-        'Content-Type': 'application/json',
-        ...fetchOptions.headers
-      },
-      next,
-    }
-  );
+
+  let result: Response;
+  try {
+    result = await fetch(
+      constructedUrl.toString(),
+      {
+        method: 'GET',
+        ...fetchOptions,
+        headers: {
+          'Content-Type': 'application/json',
+          ...fetchOptions.headers
+        },
+        next,
+      }
+    );
+  } catch (netErr: any) {
+    throw new FourthwallError(netErr.message || "Network error fetching from Fourthwall", 500);
+  }
 
   const bodyRaw = await result.text();
   let body: T;
   try {
-    body = JSON.parse(bodyRaw);
-  } catch {
-    throw new FourthwallError("Failed to parse Fourthwall response", result.status);
+    const trimmed = bodyRaw.trim();
+    if (trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE')) {
+      throw new FourthwallError("Received HTML document instead of JSON", result.status);
+    }
+    body = JSON.parse(trimmed);
+  } catch (parseErr: any) {
+    throw new FourthwallError(parseErr.message || "Failed to parse Fourthwall response", result.status || 500);
   }
 
   if (result.status !== 200) {
