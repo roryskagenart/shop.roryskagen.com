@@ -1,6 +1,7 @@
 import { GridTileImage } from 'components/grid/tile';
 import { getCollectionProducts } from 'lib/fourthwall';
 import type { Product } from 'lib/types';
+import { cleanEnv } from 'lib/utils';
 import Link from 'next/link';
 
 function ThreeItemGridItem({
@@ -46,7 +47,7 @@ function ThreeItemGridItem({
 
 export async function ThreeItemGrid({currency}: { currency: string}) {
   const homepageItems = await getCollectionProducts({
-    collection: process.env.NEXT_PUBLIC_FW_COLLECTION || 'all',
+    collection: cleanEnv(process.env.NEXT_PUBLIC_FW_COLLECTION) || 'fine-art-originals',
     currency,
   });
 

@@ -5,23 +5,23 @@ import { Collection } from "lib/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-function createUrl(handle: string) {
-  return `/collections/${handle}`;
-}
-
 function PathFilterItem({ item }: { item: Collection }) {
   const pathname = usePathname();
-  const active = pathname === createUrl(item.handle);
+  const parts = pathname.split('/').filter(Boolean);
+  const currency = (parts.length > 0 && ['USD', 'EUR', 'GBP', 'CAD', 'AUD'].includes(parts[0]!)) ? parts[0] : 'USD';
+  const url = `/${currency}/collections/${item.handle}`;
+  const active = pathname === url || pathname.endsWith(`/collections/${item.handle}`);
   const DynamicTag = active ? 'p' : Link;
 
   return (
-    <li className="mt-2 flex text-black dark:text-white" key={item.title}>
+    <li className="mt-1.5 flex text-black dark:text-white" key={item.handle}>
       <DynamicTag
-        href={createUrl(item.handle)}
+        href={url}
         className={clsx(
-          'w-full text-sm underline-offset-4 hover:underline dark:hover:text-neutral-100',
+          'w-full text-xs font-medium transition-colors py-1 px-2.5 rounded-md block',
           {
-            'underline underline-offset-4': active
+            'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-black font-semibold shadow-xs': active,
+            'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white': !active
           }
         )}
       >
