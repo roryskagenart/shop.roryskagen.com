@@ -114,14 +114,7 @@ export function DocsLayout({
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/import"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-neutral-800 transition"
-            >
-              <span>Sync Dashboard</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </Link>
-
+            {/* No /import link: the docs are a public surface and /import is Basic-auth gated. */}
             <Link
               href="/USD"
               className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-900 hover:bg-white transition"
@@ -338,18 +331,8 @@ export function DocsLayout({
                 Quick Actions
               </p>
               <div className="flex flex-col gap-2">
-                <Link
-                  href="/import"
-                  className="text-xs text-neutral-400 hover:text-white flex items-center gap-1.5"
-                >
-                  <span>⚡ Fourthwall Importer</span>
-                </Link>
-                <a
-                  href="/api/import/fourthwall?format=csv"
-                  className="text-xs text-neutral-400 hover:text-white flex items-center gap-1.5"
-                >
-                  <span>📥 Download Catalog CSV</span>
-                </a>
+                {/* The importer and the CSV export are Basic-auth gated, so they are not linked
+                    from these public docs. Reach them directly at /import. */}
                 <Link
                   href="/USD"
                   className="text-xs text-neutral-400 hover:text-white flex items-center gap-1.5"
