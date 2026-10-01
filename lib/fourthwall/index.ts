@@ -171,48 +171,10 @@ const MOCK_SHOP: FourthwallShop = {
   publicDomain: 'shop.roryskagen.com'
 };
 
-const MOCK_COLLECTIONS: Collection[] = [
-  {
-    handle: 'fine-art-originals',
-    title: 'Fine Art Originals ($4k–$28k)',
-    description: 'Fifteen authentic 1-of-1 original enamel-on-steel masterworks by Rory Skagen. Certified studio provenance and museum freight crating included.'
-  },
-  {
-    handle: 'b2b-corporate-gifts',
-    title: 'B2B & Corporate Gifting',
-    description: 'Turnkey Austin executive welcome boxes, tech relocation kits, VIP speaker tokens, and event planner suites.'
-  },
-  {
-    handle: 'metal-litho',
-    title: 'Metal Lithos & Enamel Steel',
-    description: 'Heavyweight aluminum lithographs and laser-cut steel plates capturing the industrial sheen of Rory’s original paintings.'
-  },
-  {
-    handle: 'canvas-prints',
-    title: 'Museum Canvas & Archival Prints',
-    description: 'Archival Giclée matte rag editions and gallery-wrapped stretched canvas printed with 12-color pigment inks.'
-  },
-  {
-    handle: 'desk-art',
-    title: 'Desk Art & Executive Objects',
-    description: 'Heavy optical lucite blocks, sandstone coaster sets, and architectural desktop metal sculptures.'
-  },
-  {
-    handle: 'kitsch-cpg',
-    title: 'Kitsch, CPG & Austin Living',
-    description: 'Retro ceramic diner coffee mugs, collectible enamel pins, barware, and weatherproof vinyl stickers.'
-  },
-  {
-    handle: 'apparel',
-    title: 'Studio Wear & Graphic Tees',
-    description: 'Heavyweight vintage-wash cotton tees, atomic hoodies, and retro embroidered trucker caps.'
-  },
-  {
-    handle: 'all',
-    title: 'Complete Studio Catalog (137 Works)',
-    description: 'Browse the entire Rory Skagen studio archive spanning originals, prints, murals, and kaiju masterworks.'
-  }
-];
+// NOTE: a `MOCK_COLLECTIONS` list lived here — a second, hand-maintained copy of the same eight
+// categories as `lib/taxonomy.ts`, with different titles and no badges, price ranges or audiences.
+// It was unreachable (see `getCollections`) and duplicating the taxonomy is what let the two drift
+// apart. Navigation now comes from `PRODUCT_COLLECTIONS` in one place.
 
 const RORY_ARTWORKS: RoryArtwork[] = roryArtworksData as RoryArtwork[];
 
@@ -337,7 +299,40 @@ const inMemoryCarts = new Map<string, FourthwallCart>();
 /**
  * Collection operations
  */
+/**
+ * Storefront navigation.
+ *
+ * `lib/taxonomy.ts` is the navigation DESIGN: it carries the badge, price range, hero tagline and
+ * target audiences that the UI renders, and it marks categories as `active` / `inquiry` / `roadmap`.
+ * Roadmap categories are not dead entries — the collection page has a purpose-built "Collection in
+ * Production" empty state that lists their `sampleProducts`.
+ *
+ * This function used to discard that entire design the moment Fourthwall returned anything at all:
+ *
+ *     if (res.body?.results?.length) return res.body.results.map(...)
+ *     return MOCK_COLLECTIONS
+ *
+ * Fourthwall answers with its two built-in collections (`featured`, `all`), so the branch always
+ * won and an eight-category navigation silently collapsed to two. `MOCK_COLLECTIONS` — the curated
+ * fallback — was unreachable code, and `PRODUCT_COLLECTIONS` was imported here but never used.
+ *
+ * Fourthwall is now a SUPPLEMENT rather than a replacement: its collections are appended when they
+ * are not already part of the taxonomy, so a collection created in the dashboard still surfaces.
+ */
 export async function getCollections(): Promise<Collection[]> {
+  const curated: Collection[] = PRODUCT_COLLECTIONS.map((collection) => ({
+    handle: collection.handle,
+    title: collection.title,
+    description: collection.description,
+  }));
+
+  const allProducts: Collection = {
+    handle: 'all',
+    title: 'All Products',
+    description: 'Browse the entire Rory Skagen studio archive.',
+  };
+
+  let remote: Collection[] = [];
   try {
     const res = await fourthwallGet<{ results: FourthwallCollection[] }>(
       `${API_URL}/collections`,
@@ -345,18 +340,20 @@ export async function getCollections(): Promise<Collection[]> {
       { next: { revalidate: 3600 } }
     );
 
-    if (res.body?.results?.length) {
-      return res.body.results.map((collection) => ({
-        handle: collection.slug,
-        title: collection.name,
-        description: collection.description,
-      }));
-    }
+    remote = (res.body?.results ?? []).map((collection) => ({
+      handle: collection.slug,
+      title: collection.name,
+      description: collection.description,
+    }));
   } catch {
-    // Fall back to catalog collections
+    // Fourthwall unreachable — the curated taxonomy is still a complete navigation on its own,
+    // which is precisely why it must not be treated as a fallback.
   }
 
-  return MOCK_COLLECTIONS;
+  const known = new Set<string>([...curated.map((c) => c.handle), allProducts.handle]);
+  const extras = remote.filter((collection) => collection.handle && !known.has(collection.handle));
+
+  return [...curated, allProducts, ...extras];
 }
 
 export async function getCollectionProducts({
@@ -417,9 +414,15 @@ export async function getCollectionProducts({
     return reshapeProducts(sliced);
   }
 
-  // Fallback to the 15 originals
-  const defaultList = limit ? ORIGINALS.slice(0, limit) : ORIGINALS;
-  return reshapeProducts(defaultList.map((o) => buildOriginalProduct(o, currency)));
+  // Nothing matched this handle. Return empty so the collection page renders its designed
+  // "Collection in Production" empty state.
+  //
+  // This used to return the fifteen fine-art originals for ANY unmatched handle. The effect was that
+  // every category without products — `apparel`, `desk-art`, `metal-litho`, `canvas-prints`,
+  // `b2b-corporate-gifts` — silently rendered the same fifteen $4k–$28k originals, and the empty
+  // state could never render because `products.length` was never 0. A category that lies about its
+  // contents is worse than a category that admits it is empty.
+  return [];
 }
 
 /**
