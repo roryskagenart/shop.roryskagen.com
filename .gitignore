@@ -30,6 +30,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Local agent working notes (memory logs, snapshots). Never part of the repo — this is the same
+# directory `.vercelignore` excludes from deployments, and it was previously only excluded there.
+.workbuddy-ai
+
 # vercel
 .vercel
 
