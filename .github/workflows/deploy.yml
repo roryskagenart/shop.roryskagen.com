@@ -59,9 +59,10 @@ jobs:
       - name: Test
         run: npm test
 
-      # `.vercel/` is gitignored, so the checked-out tree has no project link. The CLI needs these
-      # two IDs to know which project to deploy to.
-      # CLI version is pinned, not @latest, so a Vercel release cannot change deploy behaviour
+      # `.vercel/` is gitignored, so the checked-out tree has no project link. The two IDs in `env`
+      # below are what tell the CLI which project to deploy to.
+      #
+      # The CLI version is pinned, not @latest, so a Vercel release cannot change deploy behaviour
       # without a deliberate commit. 59.16.0 is the version verified against this project.
       - name: Deploy to Vercel (production)
         run: npx --yes vercel@59.16.0 deploy --prod --yes
@@ -72,12 +73,13 @@ jobs:
 
 # REQUIRED REPOSITORY CONFIGURATION
 #
-#   Secret   VERCEL_TOKEN        A Vercel access token with access to the ventureio team.
-#                                Create with:
-#                                  vercel tokens add "GitHub Actions deploy" \
-#                                    --project prj_KIs1PfvpRzKhmKAFVYcmM6nvMmTT
-#                                or at https://vercel.com/account/tokens (Scope -> ventureio ->
-#                                shop.roryskagenart.com).
+#   Secret   VERCEL_TOKEN        A Vercel access token scoped to this project.
+#                                Create at https://vercel.com/account/tokens with
+#                                Scope -> ventureio -> shop.roryskagenart.com, then:
+#                                  gh secret set VERCEL_TOKEN --repo roryskagenart/shop.roryskagen.com
+#                                (`vercel tokens add` cannot be used: it fails with
+#                                 "Cannot create tokens for this app. (403)" — minting a token
+#                                 requires a full-account token, which the CLI session is not.)
 #
 #   Variable VERCEL_ORG_ID       team_SLHxonjvWXqrbtXrMgxmcw9f
 #   Variable VERCEL_PROJECT_ID   prj_KIs1PfvpRzKhmKAFVYcmM6nvMmTT
