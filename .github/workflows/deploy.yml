@@ -1,0 +1,90 @@
+name: Deploy
+
+# WHY THIS EXISTS
+# The Vercel project (ventureio/shop.roryskagenart.com) is NOT connected to a Git repository, so
+# Vercel cannot build on push. `vercel git connect` fails with a generic access error, and Vercel
+# refuses to create deploy hooks without a Git connection ("This project is not connected to a Git
+# repository, so it cannot have deploy hooks"). This workflow is the bypass: GitHub Actions runs
+# the Vercel CLI with a project-scoped token instead of relying on the Git integration.
+#
+# The real fix is still to connect the repo under Project Settings -> Git. Delete this workflow once
+# that lands.
+
+on:
+  # Manual trigger. This is the only path that can deploy until the repository variable
+  # VERCEL_DEPLOY_ENABLED is set to exactly 'true' (see the job-level `if` below).
+  workflow_dispatch:
+
+  # Push-to-deploy is wired but INERT by default. It is skipped unless VERCEL_DEPLOY_ENABLED is set,
+  # so landing this file does not start auto-deploying main.
+  push:
+    branches: [main]
+
+# Never let two production deploys overlap. Unlike CI, do NOT cancel in progress: a half-cancelled
+# deploy can leave the alias pointing at an older build.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # Two ways in: a human clicked Run workflow, or the opt-in variable was flipped.
+    if: github.event_name == 'workflow_dispatch' || vars.VERCEL_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+
+    # Creates a GitHub Environment named "production". It has no protection rules by default, but it
+    # is where you add required reviewers if you want a human approval gate before production.
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Re-run the gates here rather than trusting the CI run. A deploy triggered by
+      # workflow_dispatch is not tied to any particular CI result, and shipping an unverified commit
+      # to production is worse than paying for the extra minute.
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # `.vercel/` is gitignored, so the checked-out tree has no project link. The two IDs in `env`
+      # below are what tell the CLI which project to deploy to.
+      #
+      # The CLI version is pinned, not @latest, so a Vercel release cannot change deploy behaviour
+      # without a deliberate commit. 59.16.0 is the version verified against this project.
+      - name: Deploy to Vercel (production)
+        run: npx --yes vercel@59.16.0 deploy --prod --yes
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+
+# REQUIRED REPOSITORY CONFIGURATION
+#
+#   Secret   VERCEL_TOKEN        A Vercel access token scoped to this project.
+#                                Create at https://vercel.com/account/tokens with
+#                                Scope -> ventureio -> shop.roryskagenart.com, then:
+#                                  gh secret set VERCEL_TOKEN --repo roryskagenart/shop.roryskagen.com
+#                                (`vercel tokens add` cannot be used: it fails with
+#                                 "Cannot create tokens for this app. (403)" — minting a token
+#                                 requires a full-account token, which the CLI session is not.)
+#
+#   Variable VERCEL_ORG_ID       team_SLHxonjvWXqrbtXrMgxmcw9f
+#   Variable VERCEL_PROJECT_ID   prj_KIs1PfvpRzKhmKAFVYcmM6nvMmTT
+#   Variable VERCEL_DEPLOY_ENABLED  Set to 'true' to arm push-to-deploy on main. Leave unset to keep
+#                                deploys manual.
+#
+# NOTE: this file has not been run end-to-end. The only way to exercise it is to deploy, which is
+# currently out of scope. Treat the first manual run as the test.
