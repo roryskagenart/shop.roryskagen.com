@@ -98,7 +98,7 @@ export const DEV_DOCS_STRUCTURE: DocCategory[] = [
         title: 'Catalog Import Pipeline',
         slug: 'import-pipeline',
         badge: '137 Works',
-        description: 'Migration from jadenblack/roryskagenart.com, Supabase DB & Cloudinary assets.'
+        description: 'Migration from roryskagenart/roryskagenart.com, Supabase DB & Cloudinary assets.'
       },
       {
         title: 'CLI & Automation Tools',
@@ -429,7 +429,7 @@ This web application represents the production ecommerce storefront for **Rory S
 
 The project fulfills two primary operational mandates:
 1. **High-Performance Omnichannel Storefront:** Fast, beautifully rendered fine art catalog supporting responsive layouts, multi-currency switching (USD, EUR, GBP, CAD, AUD), and persistent cart management.
-2. **Catalog Migration & Sync Engine:** Automated ingestion and synchronization pipeline that extracted 137 fine art masterworks from the legacy Supabase/Vercel codebase (\`jadenblack/roryskagenart.com\`) and mapped them into Fourthwall's Platform and Storefront data layers.
+2. **Catalog Migration & Sync Engine:** Automated ingestion and synchronization pipeline that extracted 137 fine art masterworks from the legacy Supabase/Vercel codebase (\`roryskagenart/roryskagenart.com\`) and mapped them into Fourthwall's Platform and Storefront data layers.
 
 ---
 
@@ -624,7 +624,7 @@ Fourthwall provides two distinct API tiers designed for separate operational rol
 | API Tier | Base Endpoint | Primary Purpose | Required Credentials |
 | :--- | :--- | :--- | :--- |
 | **Storefront API** | \`https://storefront-api.fourthwall.com/v1\` | Public catalog browsing, product query, cart creation, checkout generation | \`NEXT_PUBLIC_FW_STOREFRONT_TOKEN\` |
-| **Platform Open API** | \`https://api.fourthwall.com/open-api/v1.0\` | Administrative backend product creation, media library upload, catalog ingestion | \`FOURTHWALL_ACCESS_TOKEN\` or Basic Auth |
+| **Platform Open API** | \`https://api.fourthwall.com/open-api/v1.0\` | Shop, product, order and payout reads. **Write support is limited to a print-on-demand design pipeline — it cannot create a priced physical product.** | \`FOURTHWALL_ACCESS_TOKEN\`, or Basic Auth with \`FOURTHWALL_API_USERNAME\`/\`FOURTHWALL_API_PASSWORD\` |
 
 ---
 
@@ -647,9 +647,19 @@ Used directly by the storefront client to query data:
 
 ## Platform Open API (v1.0)
 
-Used by \`lib/fourthwall/importer.ts\` and \`scripts/import-artworks-to-fourthwall.ts\` for syncing catalog artworks to the Fourthwall merchant backend:
+Read by \`lib/fourthwall/importer.ts\` and \`scripts/import-artworks-to-fourthwall.ts\` to report live shop state.
 
-### Product Creation Payload Contract:
+### ⚠️ The write path is not supported
+
+**Fourthwall exposes no endpoint that creates a physical product with an explicit price and variant list.**
+
+\`POST /open-api/v1.0/products\` is a print-on-demand **design pipeline**. It requires \`productTemplateId\` and \`regions[]\` (each region referencing a registered media \`imageId\`), plus \`name\` and \`type\` (design / digital / customization — not \`physical\`). The optional fields are \`colors[]\`, \`sizes[]\`, \`description\`, \`profitMargin\` and \`publishOnCreate\`.
+
+There is **no \`price\`, \`variants\`, \`slug\`, \`stock\` or \`images\`** field in the request, and pricing is expressed as \`profitMargin\` on top of a template's base cost. Posting the payload below returns **400 regardless of credentials**.
+
+Verified 2026-10-01 against \`https://docs.fourthwall.com/api-reference/platform/products/create-product\`.
+
+### Intended catalogue payload (documents intent only — not accepted by any endpoint):
 \`\`\`json
 {
   "name": "Greetings from Austin",
@@ -691,7 +701,7 @@ Our integration supports three distinct authentication schemes depending on your
    \`\`\`
 2. **Basic Authentication (API Key + Secret):**
    \`\`\`http
-   Authorization: Basic base64(<FOURTHWALL_API_KEY>:<FOURTHWALL_API_SECRET>)
+   Authorization: Basic base64(<FOURTHWALL_API_USERNAME>:<FOURTHWALL_API_PASSWORD>)
    \`\`\`
 3. **Storefront Header:**
    \`\`\`http
@@ -717,7 +727,7 @@ When a customer clicks **Proceed to Checkout**, they are redirected to Fourthwal
   'dev/import-pipeline': {
     slug: 'import-pipeline',
     title: 'Catalog Import Pipeline & Data Migration',
-    description: 'Technical breakdown of extracting 137 fine art pieces from jadenblack/roryskagenart.com into Fourthwall.',
+    description: 'Technical breakdown of extracting 137 fine art pieces from roryskagenart/roryskagenart.com into Fourthwall.',
     badge: 'Data Pipeline',
     category: 'Data & Pipeline',
     scope: 'dev',
@@ -731,7 +741,7 @@ When a customer clicks **Proceed to Checkout**, they are redirected to Fourthwal
     content: `
 ## Source System Analysis
 
-The source artwork catalog was located in the repository **\`https://github.com/jadenblack/roryskagenart.com\`**, a Next.js / Express web application using a **Supabase PostgreSQL database** and a media asset pipeline distributed across **Cloudinary** and **Supabase Storage**.
+The source artwork catalog was located in the repository **\`https://github.com/roryskagenart/roryskagenart.com\`**, a Next.js / Express web application using a **Supabase PostgreSQL database** and a media asset pipeline distributed across **Cloudinary** and **Supabase Storage**.
 
 Key source files identified and parsed:
 - \`data/archive/portfolioPostsData.updated.json\`: 137 raw catalog entries containing titles, dates, mediums, dimensions, and Cloudinary URLs.
@@ -932,10 +942,15 @@ For merchants who prefer importing via Fourthwall's dashboard or third-party bul
 | \`NEXT_PUBLIC_FW_STOREFRONT_TOKEN\` | Client & Server | Yes | Storefront token provided in your Fourthwall dashboard developer settings. |
 | \`NEXT_PUBLIC_FW_COLLECTION\` | Client & Server | No | Default collection for the homepage grid and carousel (defaults to \`launch\` or \`all\`). |
 | \`NEXT_PUBLIC_FW_CHECKOUT\` | Client & Server | No | Custom domain or fallback checkout domain (\`https://shop.roryskagen.com\`). |
+| \`FOURTHWALL_PLATFORM_API_URL\` | Server Only | No | Platform API host for product writes. Defaults to \`https://api.fourthwall.com\`. **Distinct from \`NEXT_PUBLIC_FW_API_URL\`** — the Platform host must never be derived from the Storefront host. |
 | \`FOURTHWALL_ACCESS_TOKEN\` | Server Only | Optional | Bearer access token for Fourthwall Platform API write operations. |
-| \`FOURTHWALL_API_KEY\` | Server Only | Optional | Basic auth API Key / Username for Fourthwall Platform API. |
-| \`FOURTHWALL_API_SECRET\` | Server Only | Optional | Basic auth API Secret / Password for Fourthwall Platform API. |
+| \`FOURTHWALL_API_USERNAME\` | Server Only | Optional | Basic auth username for the Fourthwall Platform API. **Preferred name — this is what Vercel provisions.** |
+| \`FOURTHWALL_API_PASSWORD\` | Server Only | Optional | Basic auth password for the Fourthwall Platform API. **Preferred name — this is what Vercel provisions.** |
+| \`FOURTHWALL_API_KEY\` | Server Only | Optional | Legacy alias for \`FOURTHWALL_API_USERNAME\`. Consulted only when the preferred name is unset. |
+| \`FOURTHWALL_API_SECRET\` | Server Only | Optional | Legacy alias for \`FOURTHWALL_API_PASSWORD\`. Consulted only when the preferred name is unset. |
 | \`FOURTHWALL_WEBHOOK_SECRET\` | Server Only | Optional | Secret key to verify incoming Fourthwall webhook event signatures. |
+| \`IMPORT_ADMIN_USER\` | Server Only | Yes | Basic auth username gating \`/import\` and \`/api/import/fourthwall\`. Unset in production returns 503. |
+| \`IMPORT_ADMIN_PASSWORD\` | Server Only | Yes | Basic auth password gating \`/import\` and \`/api/import/fourthwall\`. Unset in production returns 503. |
 
 ---
 
@@ -986,7 +1001,7 @@ module.exports = {
 ## Secrets Security Best Practices
 
 1. **Never prefix private keys with \`NEXT_PUBLIC_\`**: Only public storefront tokens and API URLs should carry the \`NEXT_PUBLIC_\` prefix.
-2. **Platform write credentials must remain server-side**: \`FOURTHWALL_ACCESS_TOKEN\` and \`FOURTHWALL_API_SECRET\` are strictly consumed in server-side API routes (\`app/api/import/fourthwall/route.ts\`) and CLI scripts.
+2. **Platform write credentials must remain server-side**: \`FOURTHWALL_ACCESS_TOKEN\`, \`FOURTHWALL_API_USERNAME\` and \`FOURTHWALL_API_PASSWORD\` are read only from the deployment environment inside server-side code (\`lib/fourthwall/importer.ts\`, \`app/api/import/fourthwall/route.ts\`) and CLI scripts. They are never accepted from a request body or entered in the UI.
 `
   },
 

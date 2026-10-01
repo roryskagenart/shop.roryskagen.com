@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ArtworkSummary {
   id: string;
@@ -18,80 +18,78 @@ interface ArtworkSummary {
   variantCount: number;
 }
 
+interface FourthwallState {
+  reachable: boolean;
+  authenticated: boolean;
+  authMode: string;
+  platformApiUrl: string;
+  shop?: { id: string; name: string; domain: string; status: string };
+  productCount?: number;
+  collections?: Array<{ slug: string; name: string }>;
+  error?: string;
+  httpStatus?: number;
+  checkedAt: string;
+}
+
+interface WritePathStatus {
+  supported: boolean;
+  reason: string;
+  detail: string;
+  verifiedAgainst: string;
+  verifiedOn: string;
+}
+
+const AUTH_MODE_LABEL: Record<string, string> = {
+  bearer: 'Bearer token',
+  basic: 'Basic auth',
+  storefront: 'Storefront token only',
+  none: 'Not configured'
+};
+
+function SourceTag({ children }: { children: React.ReactNode }) {
+  return <span className="text-[10px] text-neutral-500">{children}</span>;
+}
+
 export default function ImportPage() {
   const [data, setData] = useState<{
     summary?: any;
     artworks?: ArtworkSummary[];
+    fourthwall?: FourthwallState;
+    writePath?: WritePathStatus;
   }>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedSeries, setSelectedSeries] = useState('All');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [dryRun, setDryRun] = useState(true);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [syncResult, setSyncResult] = useState<{
-    success?: boolean;
-    created?: number;
-    failed?: number;
-    totalProcessed?: number;
-  } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Optional custom credentials for testing/manual sync
-  const [platformToken, setPlatformToken] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
-
-  useEffect(() => {
-    fetch('/api/import/fourthwall')
+  const load = useCallback(() => {
+    return fetch('/api/import/fourthwall', { cache: 'no-store' })
       .then((res) => res.json())
       .then((json) => {
         setData(json);
-        setLoading(false);
+        setLoadError(null);
       })
       .catch((err) => {
         console.error('Failed to load import status:', err);
+        setLoadError(err?.message || 'Failed to load status');
+      })
+      .finally(() => {
         setLoading(false);
+        setRefreshing(false);
       });
   }, []);
 
-  const handleSync = async () => {
-    setIsSyncing(true);
-    setLogs(['Initiating Fourthwall API import request...']);
-    setSyncResult(null);
-
-    try {
-      const payload: any = {
-        dryRun,
-        credentials: {}
-      };
-      if (platformToken.trim()) payload.credentials.platformToken = platformToken.trim();
-      if (apiKey.trim()) payload.credentials.apiKey = apiKey.trim();
-      if (apiSecret.trim()) payload.credentials.apiSecret = apiSecret.trim();
-
-      const res = await fetch('/api/import/fourthwall', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      setLogs(result.logs || []);
-      setSyncResult({
-        success: result.success,
-        created: result.created,
-        failed: result.failed,
-        totalProcessed: result.totalProcessed
-      });
-    } catch (err: any) {
-      setLogs((prev) => [...prev, `[Fatal Error] ${err.message || 'Request failed'}`]);
-      setSyncResult({ success: false, failed: 1, created: 0, totalProcessed: 0 });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const artworks = data.artworks || [];
   const seriesOptions = ['All', 'Austin Iconic & Texas Pop', 'Monsters & Kaiju', 'Pop Surrealism & Folklore', 'Atomic Pop & Sci-Fi'];
+
+  const summary = data.summary;
+  const fw = data.fourthwall;
+  const writePath = data.writePath;
 
   const filtered = artworks.filter((art) => {
     const matchesSeries = selectedSeries === 'All' || art.series === selectedSeries;
@@ -116,37 +114,43 @@ export default function ImportPage() {
             />
             <div>
               <div className="flex items-center gap-3">
-                <Link
-                  href="/USD"
-                  className="text-xs uppercase tracking-wider text-emerald-400 hover:underline"
-                >
+                <Link href="/USD" className="text-xs uppercase tracking-wider text-emerald-400 hover:underline">
                   ← Return to Storefront
                 </Link>
                 <span className="text-neutral-600">|</span>
-                <span className="rounded bg-emerald-950/80 px-2 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-800">
-                  Catalog Synced
+                <span className="rounded bg-neutral-800 px-2 py-0.5 text-xs font-semibold text-neutral-300 border border-neutral-700">
+                  Internal Tool
                 </span>
                 <span className="text-neutral-600">|</span>
-                <span className="text-xs font-mono text-neutral-400">
-                  Austin, Texas • Est. 1985
-                </span>
+                <span className="text-xs font-mono text-neutral-400">Austin, Texas • Est. 1985</span>
               </div>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">
-                Rory Skagen Art → Fourthwall API Importer
+                Rory Skagen Art → Fourthwall Integration
               </h1>
               <p className="mt-1 text-sm text-neutral-400">
-                Imported 137 authentic fine art pieces from <code className="text-neutral-300">jadenblack/roryskagenart.com</code> into your Fourthwall store.
+                Source catalogue migrated from <code className="text-neutral-300">roryskagenart/roryskagenart.com</code>.
+                Every number below is labelled with where it came from.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                setRefreshing(true);
+                load();
+              }}
+              disabled={refreshing}
+              className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-3.5 py-2 text-xs font-medium text-white hover:bg-neutral-700 disabled:opacity-50 transition"
+            >
+              {refreshing ? 'Refreshing…' : '↻ Re-query Fourthwall'}
+            </button>
             <a
               href="/api/import/fourthwall?format=csv"
               download="rory-skagen-fourthwall-catalog.csv"
               className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-3.5 py-2 text-xs font-medium text-white hover:bg-neutral-700 transition"
             >
-              📥 Export Fourthwall CSV
+              📥 Export Catalogue CSV
             </a>
             <a
               href="/api/import/fourthwall?format=fourthwall-json"
@@ -154,181 +158,151 @@ export default function ImportPage() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-3.5 py-2 text-xs font-medium text-white hover:bg-neutral-700 transition"
             >
-              📋 Open API JSON Payload
+              📋 Intended Payload
             </a>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-        {/* Metric Cards */}
+        {loadError && (
+          <div className="mb-6 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-xs text-red-300">
+            Could not load status: {loadError}
+          </div>
+        )}
+
+        {/* Metric Cards — each labelled with its source */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-6 mb-8">
           <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Total Fine Art Pieces</p>
+            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Local Catalogue</p>
             <p className="mt-2 text-3xl font-extrabold text-emerald-400">
-              {loading ? '...' : data.summary?.totalArtworks || 137}
+              {loading ? '…' : summary?.totalArtworks ?? '—'}
             </p>
-            <p className="mt-1 text-xs text-neutral-500">100% catalog coverage</p>
+            <SourceTag>from committed JSON</SourceTag>
           </div>
 
           <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Curated Series</p>
-            <p className="mt-2 text-3xl font-extrabold text-cyan-400">4</p>
-            <p className="mt-1 text-xs text-neutral-500">Austin, Kaiju, Sci-Fi, Pop</p>
+            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Publishable</p>
+            <p className="mt-2 text-3xl font-extrabold text-cyan-400">
+              {loading ? '…' : summary?.publishableCount ?? '—'}
+            </p>
+            <SourceTag>
+              {summary ? `${summary.publishableWithOriginal} with original · ${summary.publishablePrintsOnly} prints only` : 'Available only'}
+            </SourceTag>
           </div>
 
           <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">High-Res Assets</p>
-            <p className="mt-2 text-3xl font-extrabold text-amber-400">137 / 137</p>
-            <p className="mt-1 text-xs text-neutral-500">Cloudinary & Supabase webp</p>
+            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Fourthwall Products</p>
+            <p className="mt-2 text-3xl font-extrabold text-amber-400">
+              {loading ? '…' : typeof fw?.productCount === 'number' ? fw.productCount : '—'}
+            </p>
+            <SourceTag>{fw?.authenticated ? 'live from Platform API' : 'unavailable'}</SourceTag>
           </div>
 
           <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-5">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Storefront Status</p>
-            <p className="mt-2 text-3xl font-extrabold text-purple-400">Active</p>
-            <p className="mt-1 text-xs text-neutral-500">Live in Fourthwall store</p>
+            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Connection</p>
+            <p className={`mt-2 text-3xl font-extrabold ${fw?.authenticated ? 'text-purple-400' : 'text-red-400'}`}>
+              {loading ? '…' : fw?.authenticated ? 'Live' : 'No'}
+            </p>
+            <SourceTag>{fw?.error ? 'see detail below' : fw?.authMode ? AUTH_MODE_LABEL[fw.authMode] || fw.authMode : 'unknown'}</SourceTag>
           </div>
         </div>
 
-        {/* Sync & Credentials Panel */}
+        {/* Fourthwall live state */}
         <div className="mb-8 rounded-xl border border-neutral-800 bg-neutral-900/50 p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-2xl">
-              <h2 className="text-lg font-semibold text-white">Fourthwall API Connection & Synchronization</h2>
-              <p className="mt-1 text-sm text-neutral-400">
-                All 137 artworks are populated in the store layer. You can also trigger an automated sync to Fourthwall's Platform API to create products and upload media in your Fourthwall merchant backend.
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-neutral-300">API URL:</span>
-                  <code className="text-neutral-400">{data.summary?.credentialsStatus?.apiUrl || 'https://storefront-api.fourthwall.com'}</code>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="text-neutral-300">Storefront Token:</span>
-                  <span className="text-emerald-400">Configured</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${data.summary?.credentialsStatus?.hasPlatformCredentials ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                  <span className="text-neutral-300">Platform Credentials:</span>
-                  <span className={data.summary?.credentialsStatus?.hasPlatformCredentials ? 'text-emerald-400' : 'text-amber-400'}>
-                    {data.summary?.credentialsStatus?.hasPlatformCredentials ? 'Active' : 'Optional (Provided Below)'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sync Controls */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer select-none bg-neutral-800/80 px-3 py-2 rounded-md border border-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={dryRun}
-                  onChange={(e) => setDryRun(e.target.checked)}
-                  className="rounded border-neutral-600 bg-neutral-700 text-emerald-500 focus:ring-0"
-                />
-                Dry Run Mode
-              </label>
-
-              <button
-                onClick={handleSync}
-                disabled={isSyncing}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-50 transition"
-              >
-                {isSyncing ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    Syncing...
-                  </>
-                ) : (
-                  <>⚡ Run Fourthwall Sync</>
-                )}
-              </button>
-            </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold text-white">Fourthwall Live State</h2>
+            {fw?.checkedAt && (
+              <span className="text-xs text-neutral-500 font-mono">
+                queried {new Date(fw.checkedAt).toLocaleString()}
+              </span>
+            )}
           </div>
+          <p className="mt-1 text-sm text-neutral-400">
+            Queried from the Platform API at request time. Nothing on this page is inferred from local files.
+          </p>
 
-          {/* Optional Platform API Credentials Accordion */}
-          <details className="mt-5 border-t border-neutral-800 pt-4">
-            <summary className="text-xs font-medium text-neutral-400 hover:text-neutral-200 cursor-pointer">
-              Optional: Enter Fourthwall Platform API Token / Key for direct backend upload →
-            </summary>
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Bearer Access Token (FOURTHWALL_ACCESS_TOKEN)</label>
-                <input
-                  type="password"
-                  placeholder="Bearer token..."
-                  value={platformToken}
-                  onChange={(e) => setPlatformToken(e.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">API Key / Username</label>
-                <input
-                  type="text"
-                  placeholder="API Key..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">API Secret / Password</label>
-                <input
-                  type="password"
-                  placeholder="API Secret..."
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
+          <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-xs sm:grid-cols-2">
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Reachable</dt>
+              <dd className={fw?.reachable ? 'text-emerald-400' : 'text-red-400'}>{String(fw?.reachable ?? '—')}</dd>
             </div>
-          </details>
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Authenticated</dt>
+              <dd className={fw?.authenticated ? 'text-emerald-400' : 'text-red-400'}>{String(fw?.authenticated ?? '—')}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Auth mode</dt>
+              <dd className="text-neutral-200">{fw?.authMode ? AUTH_MODE_LABEL[fw.authMode] || fw.authMode : '—'}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Platform API</dt>
+              <dd className="truncate font-mono text-neutral-300">{fw?.platformApiUrl || '—'}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Shop</dt>
+              <dd className="text-neutral-200">
+                {fw?.shop ? `${fw.shop.name} (${fw.shop.status})` : '—'}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-b border-neutral-800/60 py-1.5">
+              <dt className="text-neutral-400">Products</dt>
+              <dd className="text-neutral-200">{typeof fw?.productCount === 'number' ? fw.productCount : '—'}</dd>
+            </div>
+          </dl>
 
-          {/* Logs Terminal */}
-          {logs.length > 0 && (
-            <div className="mt-6 rounded-lg border border-neutral-800 bg-black p-4 font-mono text-xs text-neutral-300">
-              <div className="flex items-center justify-between pb-2 border-b border-neutral-800 mb-2">
-                <span className="text-neutral-500 uppercase tracking-wider">Sync Console Output</span>
-                {syncResult && (
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${syncResult.success ? 'bg-emerald-900/80 text-emerald-300' : 'bg-amber-900/80 text-amber-300'}`}>
-                    {syncResult.success ? 'SYNC COMPLETE' : 'COMPLETED WITH WARNINGS'}
-                  </span>
-                )}
-              </div>
-              <div className="max-h-56 overflow-y-auto space-y-1">
-                {logs.map((log, i) => (
-                  <div
-                    key={i}
-                    className={
-                      log.includes('[Error]')
-                        ? 'text-red-400'
-                        : log.includes('[Success]')
-                        ? 'text-emerald-400'
-                        : log.includes('[Dry Run]')
-                        ? 'text-cyan-300'
-                        : log.includes('[Warning]')
-                        ? 'text-amber-400'
-                        : 'text-neutral-300'
-                    }
-                  >
-                    {log}
-                  </div>
-                ))}
-              </div>
+          {fw?.collections && fw.collections.length > 0 && (
+            <p className="mt-3 text-xs text-neutral-400">
+              Collections: <span className="text-neutral-300">{fw.collections.map((c) => c.slug).join(', ')}</span>
+            </p>
+          )}
+
+          {fw?.error && (
+            <div className="mt-4 rounded-lg border border-amber-900 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+              {fw.error}
+              {fw.httpStatus ? ` (HTTP ${fw.httpStatus})` : ''}
             </div>
           )}
         </div>
 
-        {/* Catalog Search & Filtering */}
+        {/* Write path status */}
+        <div className="mb-8 rounded-xl border border-red-900/70 bg-red-950/20 p-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded bg-red-900/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-200">
+              Not implemented
+            </span>
+            <h2 className="text-lg font-semibold text-white">Fourthwall Write Path</h2>
+          </div>
+          <p className="mt-2 text-sm text-neutral-300">
+            This importer cannot push the catalogue to Fourthwall. The endpoint it previously targeted is a
+            print-on-demand design pipeline, not product CRUD — it requires a product template and design regions,
+            and accepts no price, variants or stock.
+          </p>
+          <ul className="mt-3 space-y-1 text-xs text-neutral-400">
+            <li>
+              <span className="text-neutral-500">Reason:</span> <code className="text-neutral-300">{writePath?.reason || 'no-supported-endpoint'}</code>
+            </li>
+            <li>
+              <span className="text-neutral-500">Verified against:</span>{' '}
+              <a
+                href={writePath?.verifiedAgainst}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:underline"
+              >
+                {writePath?.verifiedAgainst || 'Fourthwall API reference'}
+              </a>{' '}
+              <span className="text-neutral-600">({writePath?.verifiedOn})</span>
+            </li>
+          </ul>
+          <p className="mt-3 text-xs text-neutral-500">
+            The previous build reported a green <span className="font-mono">SYNC COMPLETE</span> for responses it never
+            checked. It now refuses to write rather than reporting a false success.
+          </p>
+        </div>
+
+        {/* Catalogue Search & Filtering */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Series filter tabs */}
           <div className="flex flex-wrap gap-1.5">
             {seriesOptions.map((s) => (
               <button
@@ -345,7 +319,6 @@ export default function ImportPage() {
             ))}
           </div>
 
-          {/* Search box */}
           <div className="relative w-full sm:w-64">
             <input
               type="text"
@@ -367,7 +340,7 @@ export default function ImportPage() {
                   <th className="px-4 py-3">Series</th>
                   <th className="px-4 py-3">Medium & Dimensions</th>
                   <th className="px-4 py-3">Year</th>
-                  <th className="px-4 py-3">Base Price</th>
+                  <th className="px-4 py-3">Print Base</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Action</th>
                 </tr>
@@ -405,6 +378,8 @@ export default function ImportPage() {
                         className={`rounded px-2 py-0.5 text-[10px] font-medium border ${
                           art.status === 'Available'
                             ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                            : art.status === 'Archived'
+                            ? 'bg-red-950/60 text-red-300 border-red-900'
                             : 'bg-neutral-800 text-neutral-400 border-neutral-700'
                         }`}
                       >
@@ -426,8 +401,8 @@ export default function ImportPage() {
           </div>
 
           <div className="border-t border-neutral-800 px-4 py-3 text-xs text-neutral-500 flex items-center justify-between">
-            <span>Showing {filtered.length} of {artworks.length} fine art pieces</span>
-            <span className="text-neutral-400">All artworks mapped from Supabase/Vercel roryskagenart.com catalog</span>
+            <span>Showing {filtered.length} of {artworks.length} artworks</span>
+            <span className="text-neutral-400">Local catalogue only — not a reflection of the Fourthwall store</span>
           </div>
         </div>
       </main>
