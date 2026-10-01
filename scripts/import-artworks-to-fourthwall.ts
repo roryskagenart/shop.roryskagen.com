@@ -1,59 +1,75 @@
 import {
-  getAllArtworks,
+  FOURTHWALL_WRITE_PATH_STATUS,
   getArtworksSummary,
-  getResolvedCredentials,
-  syncArtworksToFourthwall
+  getFourthwallConnectionState,
+  getPublishableArtworks
 } from '../lib/fourthwall/importer';
 
+/**
+ * Diagnostic CLI for the Fourthwall integration.
+ *
+ * This script deliberately does NOT attempt a write. See FOURTHWALL_WRITE_PATH_STATUS in
+ * lib/fourthwall/importer.ts: Fourthwall exposes no endpoint that creates a physical
+ * product with an explicit price and variant list, so any write would return 400. The
+ * previous version of this script called syncArtworksToFourthwall() and reported success
+ * for responses it never checked.
+ */
 async function main() {
   console.log('====================================================');
-  console.log(' Rory Skagen Studio -> Fourthwall Catalog Importer ');
+  console.log(' Rory Skagen Studio -> Fourthwall Diagnostics       ');
   console.log('====================================================\n');
 
   const summary = getArtworksSummary();
-  console.log(`📦 Total Artworks Ready: ${summary.totalArtworks}`);
-  console.log('Series Breakdown:');
+
+  console.log('📦 Local catalogue');
+  console.log(`  Total artworks      : ${summary.totalArtworks}`);
+  console.log(`  Status breakdown    : ${JSON.stringify(summary.statusBreakdown)}`);
+  console.log(`  Publishable (Available): ${summary.publishableCount}`);
+  console.log(`    with original record : ${summary.publishableWithOriginal}`);
+  console.log(`    prints only          : ${summary.publishablePrintsOnly}`);
+
+  console.log('\n📚 Series breakdown');
   Object.entries(summary.seriesBreakdown).forEach(([series, count]) => {
     console.log(`  - ${series}: ${count} pieces`);
   });
 
-  const creds = getResolvedCredentials();
-  console.log('\n🔑 Fourthwall Connection Settings:');
-  console.log(`  - API URL: ${creds.apiUrl}`);
-  console.log(`  - Storefront Token: ${creds.storefrontToken ? '✓ Detected' : '✗ Missing'}`);
-  console.log(`  - Platform Token: ${creds.platformToken ? '✓ Detected' : '✗ Missing'}`);
-  console.log(`  - Basic Auth API Key: ${creds.apiKey ? '✓ Detected' : '✗ Missing'}`);
-  console.log(`  - Checkout: ${creds.checkoutDomain}\n`);
+  console.log('\n🔑 Resolved configuration');
+  console.log(`  Storefront API URL  : ${summary.credentialsStatus.storefrontApiUrl}`);
+  console.log(`  Platform API URL    : ${summary.credentialsStatus.platformApiUrl}`);
+  console.log(`  Auth mode           : ${summary.credentialsStatus.authMode}`);
+  console.log(`  Checkout domain     : ${summary.credentialsStatus.checkoutDomain}`);
 
-  const isDryRun = process.argv.includes('--dry-run');
-  const limitArg = process.argv.find((arg) => arg.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1]!, 10) : undefined;
-
-  console.log(`🚀 Starting sync (dryRun=${isDryRun}, limit=${limit || 'all'})...\n`);
-
-  const result = await syncArtworksToFourthwall({
-    dryRun: isDryRun,
-    limit
-  });
-
-  console.log('\n====================================================');
-  console.log(' Import Summary:');
-  console.log(`  Total Processed: ${result.totalProcessed}`);
-  console.log(`  Successfully Ready / Synced: ${result.created}`);
-  console.log(`  Failed: ${result.failed}`);
-  console.log('====================================================\n');
-
-  if (result.errors.length > 0) {
-    console.error('Errors encountered:');
-    result.errors.forEach((err) => {
-      console.error(`  - ${err.slug}: ${err.error}`);
-    });
-  } else {
-    console.log('✨ All fine art pieces successfully processed and verified!');
+  console.log('\n📡 Live Fourthwall state (queried, not inferred)');
+  const state = await getFourthwallConnectionState();
+  console.log(`  Reachable           : ${state.reachable}`);
+  console.log(`  Authenticated       : ${state.authenticated}`);
+  if (state.shop) {
+    console.log(`  Shop                : ${state.shop.name} (${state.shop.status}) — ${state.shop.domain}`);
   }
+  if (typeof state.productCount === 'number') {
+    console.log(`  Products in store   : ${state.productCount}`);
+  }
+  if (state.collections) {
+    console.log(`  Collections         : ${state.collections.map((c) => c.slug).join(', ') || '(none)'}`);
+  }
+  if (state.error) {
+    console.log(`  ⚠️  ${state.error}`);
+  }
+  console.log(`  Checked at          : ${state.checkedAt}`);
+
+  console.log('\n🚧 Write path');
+  console.log(`  Supported           : ${FOURTHWALL_WRITE_PATH_STATUS.supported}`);
+  console.log(`  Reason              : ${FOURTHWALL_WRITE_PATH_STATUS.reason}`);
+  console.log(`  Detail              : ${FOURTHWALL_WRITE_PATH_STATUS.detail}`);
+  console.log(`  Verified against    : ${FOURTHWALL_WRITE_PATH_STATUS.verifiedAgainst} (${FOURTHWALL_WRITE_PATH_STATUS.verifiedOn})`);
+
+  console.log('\n' + '='.repeat(52));
+  console.log(` Publishable artworks: ${getPublishableArtworks().length}`);
+  console.log(' No write attempted. See the write-path status above.');
+  console.log('='.repeat(52) + '\n');
 }
 
 main().catch((err) => {
-  console.error('Fatal import error:', err);
+  console.error('Fatal diagnostics error:', err);
   process.exit(1);
 });
