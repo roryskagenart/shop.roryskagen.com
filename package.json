@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "import:fourthwall": "tsx scripts/import-artworks-to-fourthwall.ts",
+    "publish:merch": "tsx scripts/publish-merch-to-fourthwall.ts",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "test": "vitest run",
