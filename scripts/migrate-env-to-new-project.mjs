@@ -178,7 +178,12 @@ async function main() {
 
   for (const p of plan) {
     const prior = existing.get(p.key);
-    const body = { key: p.key, value: p.value, type: p.type, target: TARGETS };
+    // An existing variable keeps its own type. Vercel rejects any change with
+    //   400 "You cannot change the type of a Sensitive Environment Variable."
+    // which is easy to misread as a failed copy — the value is usually already correct. Preserve
+    // whatever type the variable already has; only create a fresh one with our computed type.
+    const type = prior?.type === 'sensitive' ? 'sensitive' : prior ? prior.type || p.type : p.type;
+    const body = { key: p.key, value: p.value, type, target: TARGETS };
     const res = prior
       ? await api(`/v9/projects/${PROJECT}/env/${prior.id}`, { method: 'PATCH', body: JSON.stringify(body) })
       : await api(`/v10/projects/${PROJECT}/env`, { method: 'POST', body: JSON.stringify(body) });
@@ -186,10 +191,14 @@ async function main() {
     if (res.ok) {
       if (prior) updated++;
       else created++;
-      console.log(`  ✓ ${prior ? 'updated' : 'created'}  ${p.key}`);
+      console.log(`  ✓ ${prior ? 'updated' : 'created'}  ${p.key}${prior ? ` (type kept: ${type})` : ''}`);
     } else {
       failed++;
-      console.log(`  ✗ FAILED   ${p.key}  ${res.status} ${(await res.text()).slice(0, 200)}`);
+      const detail = (await res.text()).slice(0, 200);
+      console.log(`  ✗ FAILED   ${p.key}  ${res.status} ${detail}`);
+      if (/change the type/i.test(detail)) {
+        console.log('     ^ pre-existing variable with a locked type; its value was NOT written.');
+      }
     }
   }
 
