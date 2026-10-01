@@ -36,6 +36,9 @@ import {
  *   --margin <usd>       explicit margin, used instead of --target-price.
  *   --region <id>        which customizable area to render into. Resolved from the template when the
  *                        template offers exactly one area; required when it offers several.
+ *   --force              create even when a product with the same name already exists. Needed to
+ *                        rebuild a product that was archived (DELETE is a soft delete, so the old
+ *                        record keeps the name).
  *   --publish            publish on create. Default is hidden.
  *   --limit <n>          stop after n eligible artworks.
  *   --min-px <n>         override the 1500px gate.
@@ -48,6 +51,7 @@ interface Args {
   targetPrice?: number;
   margin?: number;
   region?: string;
+  force: boolean;
   publish: boolean;
   limit?: number;
   minPx: number;
@@ -55,7 +59,7 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { apply: false, publish: false, minPx: FOURTHWALL_MIN_ACCEPTED_PX };
+  const args: Args = { apply: false, force: false, publish: false, minPx: FOURTHWALL_MIN_ACCEPTED_PX };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
     const next = (): string => {
@@ -78,6 +82,9 @@ function parseArgs(argv: string[]): Args {
         break;
       case '--region':
         args.region = next();
+        break;
+      case '--force':
+        args.force = true;
         break;
       case '--publish':
         args.publish = true;
@@ -373,9 +380,14 @@ async function main() {
     const prefix = `  ${artwork.slug}`;
 
     if (existingNames.has(name)) {
-      console.log(`${prefix} — SKIP, a product named "${name}" already exists`);
-      alreadyPresent++;
-      continue;
+      if (!args.force) {
+        console.log(`${prefix} — SKIP, a product named "${name}" already exists (pass --force to create anyway)`);
+        alreadyPresent++;
+        continue;
+      }
+      // An archived product keeps its name, so a rebuild always trips this. Say so rather than
+      // silently producing a second product with the same name.
+      console.log(`${prefix} — NOTE "${name}" already exists; creating another because of --force`);
     }
 
     if (!args.apply) {
