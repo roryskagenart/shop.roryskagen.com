@@ -83,7 +83,11 @@ export function middleware(req: NextRequest) {
 
   let decoded: string;
   try {
-    decoded = atob(header.slice('Basic '.length));
+    // `atob` returns a Latin-1 byte string, so a UTF-8 password ("pässwörd") would be mangled and
+    // rejected — even though the challenge below advertises charset="UTF-8". Re-read the decoded
+    // bytes as UTF-8. TextDecoder is available in both the Edge and Node runtimes.
+    const bytes = Uint8Array.from(atob(header.slice('Basic '.length)), (char) => char.charCodeAt(0));
+    decoded = new TextDecoder().decode(bytes);
   } catch {
     return unauthorized();
   }

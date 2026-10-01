@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Cancel superseded runs on the same ref so a stale push cannot report last.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # package.json declares engines.node >= 20.
+          node-version: '20'
+          cache: npm
+
+      # `.npmrc` sets legacy-peer-deps=true, which npm honours here. The repo also carries a
+      # bun.lock and the README still says `pnpm install`; package-lock.json is the file that
+      # actually matches package.json (verified with `npm ci --dry-run`), so CI follows npm.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Test
+        run: npm test
