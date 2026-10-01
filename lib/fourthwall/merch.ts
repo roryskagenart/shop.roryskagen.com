@@ -167,6 +167,15 @@ export interface BuildDesignProductInput {
   name: string;
   description: string;
   imageId: string;
+  /**
+   * Which customizable area to render into. Must equal a `regionId` from the template's
+   * `customizableAreas` (see `GET /product-templates/{id}`) — **not** a placement id.
+   *
+   * The default below is only a fallback. Callers should resolve it against the chosen template:
+   * a tee exposes `front` / `back` / `sleeve_left` …, so `front` happens to work, but a mug exposes a
+   * single area named `default` whose placements are `front` / `back`. Sending `front` for a mug is
+   * rejected with a validation error.
+   */
   region?: string;
   placementStrategy?: PlacementStrategy;
   placementId?: string;

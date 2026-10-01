@@ -34,6 +34,8 @@ import {
  *   --template <id|name> required to create; matched on id, then on exact name.
  *   --target-price <usd> target retail price; converted to Fourthwall's profitMargin.
  *   --margin <usd>       explicit margin, used instead of --target-price.
+ *   --region <id>        which customizable area to render into. Resolved from the template when the
+ *                        template offers exactly one area; required when it offers several.
  *   --publish            publish on create. Default is hidden.
  *   --limit <n>          stop after n eligible artworks.
  *   --min-px <n>         override the 1500px gate.
@@ -45,6 +47,7 @@ interface Args {
   template?: string;
   targetPrice?: number;
   margin?: number;
+  region?: string;
   publish: boolean;
   limit?: number;
   minPx: number;
@@ -73,6 +76,9 @@ function parseArgs(argv: string[]): Args {
       case '--margin':
         args.margin = Number(next());
         break;
+      case '--region':
+        args.region = next();
+        break;
       case '--publish':
         args.publish = true;
         break;
@@ -98,6 +104,21 @@ interface Template {
   category?: string;
   basePrice?: { amount: number; currency: string };
   productionMethod?: string;
+}
+
+interface TemplateArea {
+  regionId: string;
+  name?: string;
+  type?: string;
+  available?: boolean;
+  dimensions?: {
+    dpi?: number;
+    pixelsWidth?: number;
+    pixelsHeight?: number;
+    inchesWidth?: number;
+    inchesHeight?: number;
+  };
+  placements?: Array<{ id: string; name?: string }>;
 }
 
 interface ProductSummary {
@@ -149,6 +170,51 @@ async function fetchTemplates(): Promise<Template[]> {
   const res = await api('GET', '/product-templates');
   if (!res.ok) throw new Error(`Could not list templates: ${res.status} ${describeError(res.data)}`);
   return ((res.data as { results?: Template[] }).results ?? []) as Template[];
+}
+
+/**
+ * The template's customizable areas.
+ *
+ * `regions[].region` on the create call must equal one of these `regionId` values — NOT a placement.
+ * The distinction bites: a tee exposes `front` / `back` / `sleeve_left` …, so a hardcoded "front"
+ * happens to work there, but a mug exposes a single area named `default` whose *placements* are
+ * `front` and `back`. Passing "front" for a mug is rejected. Hence: always resolve against the
+ * template rather than assuming.
+ */
+async function fetchTemplateAreas(productId: string): Promise<TemplateArea[]> {
+  const res = await api('GET', `/product-templates/${encodeURIComponent(productId)}`);
+  if (!res.ok) {
+    throw new Error(`Could not read template ${productId}: ${res.status} ${describeError(res.data)}`);
+  }
+  return ((res.data as { customizableAreas?: TemplateArea[] }).customizableAreas ?? []) as TemplateArea[];
+}
+
+async function resolveRegionArea(template: Template, requested?: string): Promise<TemplateArea> {
+  const areas = (await fetchTemplateAreas(template.productId)).filter((a) => a.available !== false);
+  const available = areas.map((a) => a.regionId).join(', ') || '(none reported)';
+
+  if (requested) {
+    const match = areas.find((a) => a.regionId === requested);
+    if (!match) {
+      throw new Error(`Region "${requested}" is not on "${template.name}". Available: ${available}`);
+    }
+    return match;
+  }
+
+  const only = areas[0];
+  if (areas.length === 1 && only) return only;
+
+  throw new Error(
+    `"${template.name}" offers ${areas.length} customizable areas (${available}). Pass --region <id> to choose one.`
+  );
+}
+
+function describeArea(area: TemplateArea): string {
+  const d = area.dimensions;
+  const px = d?.pixelsWidth && d?.pixelsHeight ? `${d.pixelsWidth}x${d.pixelsHeight}px` : 'size unknown';
+  const dpi = d?.dpi ? ` @ ${d.dpi} DPI` : '';
+  const placements = (area.placements ?? []).map((p) => p.id).join('/');
+  return `${px}${dpi}${placements ? ` · placements: ${placements}` : ''}`;
 }
 
 async function fetchExistingProductNames(): Promise<Set<string>> {
@@ -230,6 +296,13 @@ async function main() {
     if (template.basePrice) console.log(` Base cost    : ${template.basePrice.amount} ${template.basePrice.currency}`);
   } else {
     console.log(` Template     : (none given — ${templates.length} available; pass --template to create)`);
+  }
+
+  let region: string | undefined;
+  if (template) {
+    const area = await resolveRegionArea(template, args.region);
+    region = area.regionId;
+    console.log(` Region       : ${region} — ${describeArea(area)}`);
   }
 
   let margin: number | undefined = args.margin;
@@ -333,6 +406,7 @@ async function main() {
           name,
           description: merchDescription(artwork),
           imageId,
+          region,
           profitMargin: margin,
           publishOnCreate: args.publish
         }),
