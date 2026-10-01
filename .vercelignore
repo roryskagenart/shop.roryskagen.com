@@ -1,0 +1,12 @@
+# Vercel CLI does NOT read .gitignore. It honours this file plus its own built-in defaults
+# (node_modules, .git, .next, .vercel, .env*). Anything untracked but not listed here is uploaded
+# into the deployment — which is how local working notes and build artifacts end up shipping.
+#
+# Verified 2026-10-01 with `vercel deploy --dry --json`: without this file the upload set included
+# .workbuddy-ai/memory/*.md and tsconfig.tsbuildinfo. Re-run that command after changing this file.
+
+# Local agent working notes (memory logs, snapshots). Never part of a deployment.
+.workbuddy-ai
+
+# Incremental TypeScript build cache — regenerated during the build, no reason to ship it.
+tsconfig.tsbuildinfo
