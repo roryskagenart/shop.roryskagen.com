@@ -56,9 +56,12 @@ export default async function Footer() {
             <Link href="/docs/dev" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
               Dev/Build Docs
             </Link>
-            <Link href="/import" className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400">
-              Fourthwall API Sync
-            </Link>
+            {/*
+              No link to /import here. The footer is a public surface, and /import is behind the
+              Basic-auth gate in middleware.ts — a public link would hand visitors a browser
+              password prompt. The importer is still reachable at /import by anyone who knows the
+              URL and has the credentials.
+            */}
           </div>
           <hr className="mx-4 hidden h-4 w-[1px] border-l border-neutral-400 md:inline-block" />
           <p className="md:ml-auto">
