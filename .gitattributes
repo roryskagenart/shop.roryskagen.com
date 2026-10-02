@@ -1,0 +1,28 @@
+# Line-ending policy.
+#
+# Why this file exists: `core.autocrlf = true` on the Windows dev machines, and there was no
+# .gitattributes, so git rewrites the WORKING TREE to CRLF on checkout.
+#
+# Measured 2026-10-02 (`git ls-files --eol | awk '{print $1,$2}' | sort | uniq -c`):
+#     107  i/lf w/crlf     <- the worktree is already being rewritten, repo-wide
+#      32  i/lf w/lf
+#       7  i/-text w/-text  (binary)
+#
+# For TypeScript, Markdown and JSON that is cosmetic - git normalises on comparison, so the files
+# still read as clean. For an EXECUTABLE SCRIPT it is a defect:
+#
+#   * a shebang becomes `#!/usr/bin/env bash\r` -> "./script.sh: bad interpreter"
+#   * a CR inside a `case`, heredoc or `[[ ]]` construct -> "$'\r': command not found"
+#
+# So the policy is deliberately narrow: pin the file types that BREAK, and leave the rest of the
+# repository's behaviour alone. If you add a new executable script language, add it here too.
+#
+# Repo-wide normalisation (`* text=auto eol=lf`) is a separate, larger decision - it would touch
+# the worktree of every file. Not taken here.
+
+# Shell and Python scripts must keep LF endings.
+*.sh    text eol=lf
+*.py    text eol=lf
+
+# Keep this file itself stable.
+.gitattributes text eol=lf
