@@ -33,7 +33,7 @@ trace. Commit (not push) before doing anything else.
 | Document | Status | Branch / PR | Blocking on |
 | :--- | :--- | :--- | :--- |
 | [`pr-gh-oauth_DRAFT.md`](https://github.com/roryskagenart/shop.roryskagen.com/blob/docs/gh-oauth-plan/docs/releases/plans/pr-gh-oauth_DRAFT.md) — GitHub OAuth for the `/import` admin gate | **DRAFT**, open PR | `docs/gh-oauth-plan` · **PR #2** (draft, unmerged) | **OQ1–OQ4** — whose GitHub account owns the OAuth App; OAuth App vs GitHub App; whether to keep Basic auth as a fallback; session lifetime |
-| [`pr-merch-catalog-v0.2.0_DRAFT.md`](pr-merch-catalog-v0.2.0_DRAFT.md) — **v0.2.0 "Sellable Storefront"** | **DRAFT**, not started | `docs/agentic-ops-kb` (this document only) | **OQ1–OQ8** — version-scheme reconciliation first; see the document's open-questions table |
+| [`pr-merch-catalog-v0.2.0_DRAFT.md`](pr-merch-catalog-v0.2.0_DRAFT.md) — **v0.2.0 "Staged Catalogue"** (re-scoped 2026-10-02 from "Sellable Storefront") | **DRAFT**, not started | `docs/merch-catalog-staged` (planned) | **OQ1–OQ8** — `beat-bop`'s dead image (T18) blocks the build outright; then the 1500px gate and `apparel` viability; see the document's open-questions table |
 
 > ⚠️ The `pr-gh-oauth` document lives on the **unmerged** `docs/gh-oauth-plan` branch, so it is linked to
 > its GitHub blob rather than a relative path — it does not exist on `main`.
@@ -43,14 +43,21 @@ trace. Commit (not push) before doing anything else.
 Recorded here because the plan document is long and the state is easy to misread. **The tooling is merged;
 the release is not executed.**
 
+**Re-scoped 2026-10-02.** v0.2.0 now **constructs the catalogue only**. Publication, the front-end
+refactor, and the removal of the fabricated-catalogue fallback are **Phase B** — a separate PRD. The
+catalogue is built non-public and stays that way.
+
 | Requirement | State |
 | :--- | :--- |
 | Merch importer with `--force`, dry-run by default | ✅ merged (`8373ef1`, PR #6) |
 | `lib/fourthwall/merch.ts` + tests | ✅ merged |
-| Remove the fabricated-catalogue fallback | ❌ **still live** — `lib/fourthwall/index.ts:385` and `:451` return local JSON with no Fourthwall call. See [T01](../../agentic/traps/register.md#t01) |
-| 4 sellable collections replacing 7 taxonomy handles | ❌ `lib/taxonomy.ts` still declares **7** |
-| 10 artworks published, ~40 products | ❌ not published |
-| Rebuild the 4 mugs at 15oz/20oz | ❌ still `White, 11oz` only — see [T06](../../agentic/traps/register.md#t06) |
+| A committed catalogue manifest (10 artworks, 4 collections, 6 pinned template ids) | ❌ does not exist |
+| Per-region eligibility check replacing the 1500px gate | ❌ still `FOURTHWALL_MIN_ACCEPTED_PX` |
+| The build iterates all 6 templates in one run | ❌ one template per invocation |
+| Collection create + `PUT /collections/{id}/products` in the build | ❌ not implemented |
+| `--verify` mode asserting every product reads `HIDDEN` | ❌ does not exist |
+| The catalogue built and staged non-public | ❌ not started |
+| **Phase B** — publish, un-gate, remove the fabricated-catalogue fallback | ❌ separate PRD |
 
 ## ⚠️ Before naming any release
 
