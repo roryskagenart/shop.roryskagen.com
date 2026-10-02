@@ -53,7 +53,7 @@ frontmatter.
 | :--- | :--- |
 | [`concurrent-tree-isolation`](concurrent-tree-isolation/SKILL.md) | `git status` lists files you never touched, or files you wrote revert mid-session. Move the session onto its own branch and worktree. |
 | [`catalog-merge-duplicate-guard`](catalog-merge-duplicate-guard/SKILL.md) | Merging a legacy CMS export into a live catalogue, and you must prove it **cannot** create duplicates. Relevant if `roryskagenart.com` content is ever merged in. |
-| [`windows-app-not-found-diagnose`](windows-app-not-found-diagnose/SKILL.md) | A Windows program appears installed but is not reachable from the shell — `command not found`, stale PATH, winget oddities. **This is a Windows dev machine.** |
+| [`windows-app-not-found-diagnose`](windows-app-not-found-diagnose/SKILL.md) | A Windows program appears installed but is not reachable from the shell — `command not found`, stale PATH, winget oddities. **This is a Windows dev machine.** Also covers the case where the honest answer is *"there is no CLI"*: how to prove a GUI-only app has no shell entry point, and the byte-level binary probe that shows which config files a CLI actually reads. |
 
 ---
 

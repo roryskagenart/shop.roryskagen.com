@@ -1,7 +1,7 @@
 ---
 name: windows-app-not-found-diagnose
-description: "Diagnose and fix Windows app problems: a program that appears installed but is not accessible from the shell (command not found, PATH not refreshed, winget shows nothing), a winget install that fails with installer exit code 1, a toolchain missing its linker (Rust/C++), or an install left half-broken by a reboot. Also covers PATH auditing (empty slots, duplicates, stale entries, the setx truncation hazard) and the sandbox's empty-env-var trap that breaks Windows installers and auth flows."
-version: 1.1.0
+description: "Diagnose and fix Windows app problems: a program that appears installed but is not accessible from the shell (command not found, PATH not refreshed, winget shows nothing), a winget install that fails with installer exit code 1, a toolchain missing its linker (Rust/C++), or an install left half-broken by a reboot. Also covers PATH auditing (empty slots, duplicates, stale entries, the setx truncation hazard) and the sandbox's empty-env-var trap that breaks Windows installers and auth flows. Also use when asked how to launch an app from bash and the honest answer may be 'there is no CLI' — covers proving a GUI-only app has no shell entry point, and the byte-level binary probe (grep -c on the executable) that determines which config files a CLI actually reads (e.g. CLAUDE.md vs AGENTS.md)."
+version: 1.2.0
 x-origin: workbuddy-ai/skills
 x-migrated: 2026-10-02
 ---
@@ -20,11 +20,65 @@ installed but the shell says `command not found`.
 | A. Binary truly absent | no `.exe` on disk, `winget list` empty | reinstall |
 | B. Binary present, PATH stale | `.exe` exists, registry PATH is correct, current shell can't resolve | open a new terminal |
 | C. PATH entry missing/wrong | `.exe` exists, registry PATH lacks its dir | add dir to PATH |
+| **D. No CLI exists at all** | install dir is a **GUI/Electron app**; no entry point, no bin/ | **nothing to fix — say so** (see below) |
 
 Most "it was installed but vanished" reports are **A**, caused by a later
 cleanup/uninstall pass (BulkCrapUninstaller, WinUtil, WizTree-driven cleanup)
 that deleted the folder *and* the PATH entry while the user still remembers the
 successful install.
+
+## Step 0 — Is there a CLI to find? (do this before Step 1)
+
+**Failure D is the one that produces a false statement rather than a failed command.** A user asks *"how do
+I start X from bash?"*; the agent runs `command -v x`, gets nothing, and writes **"no CLI is installed on
+this machine"** — a claim about the *machine* inferred from a probe of *one name*. Both halves of that can
+be wrong at once. Measured 2026-10-02: `codebuddy`/`workbuddy`/`wb` all absent (true) **and**
+`claude` → `~/.local/bin/claude`, Claude Code `2.0.35` present (so "no CLI" was false).
+
+**Rule: a negative probe is a negative about the name you probed, not about the category.** Before
+asserting a negative about a *category*, probe the category:
+
+```bash
+for c in x x-cli xcode xc tool cli; do
+  printf '%s -> %s\n' "$c" "$(command -v "$c" 2>/dev/null || echo 'NOT FOUND')"
+done
+```
+
+Then classify the install directory — GUI app or CLI?
+
+```bash
+ls "$LOCALAPPDATA/Programs/<Vendor>/"                 # Electron? see *.exe + app.asar + resources/
+ls "$LOCALAPPDATA/Programs/<Vendor>/resources/scripts" # installer/updater scripts only, or a real CLI?
+```
+
+**Tell-tale that it is a GUI-only app, not a CLI:**
+- `app.asar`, `app.asar.unpacked`, `resources/`, `locales/`, `*.pak`, `icudtl.dat`, `vk_swiftshader*`
+  (Electron) alongside the vendor `.exe`
+- `resources/scripts/` holds only updater plumbing (`update-progress.ps1`,
+  `launch-update-progress.vbs`)
+- `resources/vendor/` holds **zipped runtimes** (`PortableGit.zip`, `node.zip`, `python.zip`) — these are
+  extracted for the *agent's own Bash tool*, and are **not** a user-facing CLI
+
+> ⚠️ **A GUI app's "integrated terminal" does not launch a session.** It runs commands *inside* an
+> already-running session. If the user asks how to start a session from bash, the honest answer is
+> **"from the app UI — there is no shell entry point."**
+
+### Byte-level probe: what config files does a CLI actually read?
+
+Do not answer this from memory or from docs — **grep the binary**. It is one command and it is decisive:
+
+```bash
+grep -c "AGENTS.md" "$(command -v <tool>)"     # 0  <-- it does not read this
+grep -c "CLAUDE.md" "$(command -v <tool>)"     # 82 <-- it does
+```
+
+Measured 2026-10-02: Claude Code `2.0.35` contains `CLAUDE.md` **82×** and `AGENTS.md` **0×** — so a repo
+that documents its agent contract in `AGENTS.md` is **invisible** to it. Use this whenever the question is
+*"will tool Y pick up my file Z?"*; it beats reading documentation, because it reports the shipped binary.
+
+Same technique answers *"do these two tools share a skills directory?"*: they usually do not
+(`~/.<vendor>/skills/` vs `.claude/`), which means moving a skill between them is a **migration**, not a
+move.
 
 ## Step 1 — Establish ground truth
 

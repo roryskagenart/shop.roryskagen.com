@@ -19,6 +19,20 @@ This file tracks the **KB**, not the application. The application's release reco
 - **The bundled-runtime inventory**, so nobody mistakes it for a CLI: `.workbuddy-ai/binaries/` holds
   `PortableGit`, `node/22.22.2-3`, `python/3.13.12` — they serve the agent's Bash tool.
 
+### Changed
+
+- **`skills/windows-app-not-found-diagnose` re-synced to `1.2.0`.** The source skill gained a **Failure D**
+  row and a new **Step 0 — "Is there a CLI to find?"**, because that is the failure mode that produces a
+  *false statement* rather than a failed command. It now covers: probing a **category** of names before
+  asserting a negative about the category; recognising a GUI-only app from its install layout
+  (`app.asar`, `resources/vendor/*.zip` = runtimes for the agent's Bash tool, not a user CLI); and the
+  byte-level probe (`grep -c "CLAUDE.md" <binary>`) that decides which config files a CLI reads.
+
+  Re-synced by copying the source over the ported copy and running
+  [`scripts/normalize-skill-frontmatter.py`](scripts/normalize-skill-frontmatter.py) — **exactly one file
+  changed, the other ten reported `unchanged`, and a second run reported `unchanged` too**, which is the
+  idempotence the skills contract promises.
+
 ### Fixed
 
 - **A false negative published in this repo's own report.** `docs/reports/2026-10-02-agent-usage-insights.md`
