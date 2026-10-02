@@ -356,3 +356,21 @@ measurement: `lib/utils.ts` and `app/page.tsx` both fail. `prettier:check` is **
 `prettier --write .` commit that touches nothing else — recorded here so nobody mistakes that commit for
 damage.
 **Source:** 2026-10-02.
+
+<a id="t32"></a>
+
+### T32 — A CRLF checkout breaks the shell scripts
+**Status:** MITIGATED (`.gitattributes` pins LF for `*.sh` and `*.py`)
+**Bites:** `core.autocrlf = true` rewrites the **working tree** to CRLF on checkout. TypeScript, Markdown
+and JSON do not care. **An executable script does**: the shebang becomes `#!/usr/bin/env bash\r` and
+`./preflight.sh` dies with *bad interpreter*; a CR inside a `case`, heredoc or `[[ ]]` construct produces
+`$'\r': command not found`. It presents as "the script is broken", not "the checkout is broken", which is
+what makes it expensive.
+**Evidence:** `git config --get core.autocrlf` → `true`. No `.gitattributes` existed.
+`git check-attr text eol -- docs/agentic/scripts/preflight.sh` → **`unspecified`** for both. Scope measured
+with `git ls-files --eol | awk '{print $1,$2}' | sort | uniq -c` → **107 files `i/lf w/crlf`**, i.e. the
+worktree is already being rewritten repo-wide.
+**Do instead:** `.gitattributes` at the repo root pins `*.sh` and `*.py` to `eol=lf`. **If you add a new
+executable script language, add it there too.** Note the fix is deliberately narrow — the 107 CRLF files
+are cosmetic; only executables are a defect.
+**Source:** 2026-10-02.

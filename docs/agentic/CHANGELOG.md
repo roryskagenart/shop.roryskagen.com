@@ -8,6 +8,24 @@ This file tracks the **KB**, not the application. The application's release reco
 
 ---
 
+## [1.2.0] — 2026-10-02
+
+### Fixed
+
+- **A CRLF checkout would break the KB's own shell scripts.** `core.autocrlf = true` and there was **no
+  `.gitattributes`**, so git rewrites the working tree to CRLF on checkout. Harmless for TypeScript,
+  Markdown and JSON — but fatal for an executable: the shebang becomes `#!/usr/bin/env bash\r` and
+  `./preflight.sh` fails with *bad interpreter*.
+
+  Measured scope: `git ls-files --eol` → **107 files `i/lf w/crlf`**, and
+  `git check-attr text eol` → **`unspecified`** for the new scripts. → [T32](traps/register.md#t32)
+
+  Fixed with a **narrow** `.gitattributes`: `*.sh` and `*.py` pinned to `eol=lf`. The 107 CRLF files are
+  cosmetic and deliberately left alone — repo-wide normalisation (`* text=auto eol=lf`) is a larger
+  decision that would touch every file's worktree, and is **not** taken here.
+
+---
+
 ## [1.1.0] — 2026-10-02
 
 ### Added
