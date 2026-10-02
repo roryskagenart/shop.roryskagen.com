@@ -86,3 +86,61 @@ See the ported procedure in [`../skills/generated-doc-guard-integrity/SKILL.md`]
 - A README that restates the code. Describe intent, invariants, and traps — not the obvious.
 - Numbers you did not re-derive. See [`verification.md`](verification.md).
 - A "TODO" with no owner and no trigger. Either it is in the plan's task inventory or it is not real.
+
+---
+
+## 5. Redaction — this repository is public
+
+**Rule: before committing anything derived from a shell session or a machine-wide tool, redact.** This repo
+is public, so "it was in the terminal output" is not a reason to publish it.
+
+### What to remove
+
+| Remove | Keep |
+| :--- | :--- |
+| **Client and project names** belonging to any other project | **Public infrastructure names** — GitHub, Supabase, Fourthwall, Git for Windows. Naming a public SaaS is not client data, and runnable examples need real tool names. |
+| **Internal host names** and sibling directory names that carry a client's name | Public package names (`@supabase/mcp-server-supabase`) |
+| **Release versions** belonging to other projects | This project's own versions |
+| **Machine account names** and absolute home paths — write `~/.local/bin/x`, never `/c/Users/<account>/…` | `<user>`, `$USER`, `~` placeholders |
+
+### Why absolute paths are the leak you will actually make
+
+Copy-pasting a measured path out of a terminal is how an account name escapes, because the measurement is
+honest and the paste is mechanical. It happened here — three files in one session, caught only by a later
+audit. **Habit:** when quoting shell output, rewrite the home prefix to `~` *at the moment you paste it*.
+
+Sweep before pushing any doc that quotes shell output:
+
+```bash
+git grep -nIE "(C:\\\\Users|/c/Users/|/Users/[a-z])" -- docs/ AGENTS.md
+git grep -nIE "(ghp_|github_pat_|sk-[A-Za-z0-9]{16,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY)" -- .
+```
+
+### ⚠️ Redacting the tip does not clean the history
+
+Editing a file removes the terms from the **current** tree only. Every commit that ever contained them still
+has them, and `git log -p` is public. Check which commits are affected:
+
+```bash
+# grep -q, not grep -c: -c exits 1 on a zero count and silently breaks a && chain.
+for c in $(git rev-list <base>..HEAD); do
+  git show "$c" --format="" -U0 | grep -qIE "<term>" && git log -1 --format='%h %s' "$c"
+done
+```
+
+**The cheap fix, while the branch is still unmerged: squash-merge.** A squash collapses the branch into one
+commit whose diff is the **net** change — which, if the tip is already redacted, is clean. Verify before
+merging:
+
+```bash
+git diff <base>..HEAD | grep -cIE "<term>"   # 0 means the squash lands clean
+```
+
+Once merged, the only options are history rewriting on a shared branch or accepting the exposure. **Decide
+before merging, not after.**
+
+### The redaction tool is not committed
+
+A script that removes named terms must contain them, so committing it reinstates the leak. Keep it outside
+the tracked tree (`.workbuddy-ai/scripts/`), make it idempotent, and let the commit message be the record.
+**Commit messages are public too** — describe the redaction without repeating the terms.

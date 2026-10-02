@@ -18,6 +18,18 @@ This file tracks the **KB**, not the application. The application's release reco
   session**; the integrated terminal is a command surface *inside* a running session, not a launcher.
 - **The bundled-runtime inventory**, so nobody mistakes it for a CLI: `.workbuddy-ai/binaries/` holds
   `PortableGit`, `node/22.22.2-3`, `python/3.13.12` — they serve the agent's Bash tool.
+- **A redaction protocol** — [`protocols/documentation.md`](protocols/documentation.md#5-redaction--this-repository-is-public)
+  section 5. The KB had no rule for what may be committed out of a shell session, and this repository is
+  **public**. The protocol states what to remove (other clients' names, internal hosts, foreign release
+  versions, machine account names and absolute home paths) versus what to keep (public infrastructure names
+  — naming a public SaaS is not client data, and runnable examples need real tool names), and adds the two
+  sweeps to run before pushing any document that quotes shell output.
+
+  Its most important part is the part that is easy to miss: **redacting the tip does not clean the history.**
+  Every commit that ever held the terms still holds them and `git log -p` is public. While a branch is
+  **unmerged**, a **squash merge** collapses it to one commit whose diff is the *net* change — clean if the
+  tip is already redacted. Verify with `git diff <base>..HEAD | grep -cIE "<term>"` **before** merging;
+  afterwards the only options are rewriting shared history or accepting the exposure.
 
 ### Changed
 
@@ -44,7 +56,6 @@ This file tracks the **KB**, not the application. The application's release reco
   The report's Verification-status table gained a third verified row for the probe.
 
 ### Documented — a known gap, not a surprise
-
 - **Claude Code reads `CLAUDE.md`, not `AGENTS.md`.** Byte-level probe of the `2.0.35` binary:
   `grep -c "CLAUDE.md"` → **82**, `grep -c "AGENTS.md"` → **0**. A `claude` session opened in this repo
   therefore sees **neither** the root `AGENTS.md` **nor** anything under `docs/agentic/` — the whole KB is
