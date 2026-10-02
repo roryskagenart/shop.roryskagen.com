@@ -374,3 +374,22 @@ worktree is already being rewritten repo-wide.
 executable script language, add it there too.** Note the fix is deliberately narrow — the 107 CRLF files
 are cosmetic; only executables are a defect.
 **Source:** 2026-10-02.
+
+<a id="t33"></a>
+
+### T33 — A negative probe is not a universal negative
+**Status:** OPEN (habit trap)
+**Bites:** `command -v codebuddy` returning nothing proves *`codebuddy` is not installed*. It does **not**
+prove *no agent CLI is installed*. Generalising the first into the second writes a false statement into a
+published document — and a false negative is the most expensive kind, because the reader stops looking. This
+one was made and published in this repo's own report before it was caught.
+**Evidence:** The first version of
+[`../../reports/2026-10-02-agent-usage-insights.md`](../../reports/2026-10-02-agent-usage-insights.md)
+asserted **"No such CLI is installed on this machine."** Re-probing a *wider* set found
+`claude` → `/c/Users/jaden.black/.local/bin/claude`, **Claude Code `2.0.35`**. The original claim was
+defensible about `codebuddy` and wrong about the machine.
+**Do instead:** State the scope you measured, not the conclusion you inferred — *"no WorkBuddy CLI is
+installed"* rather than *"no CLI is installed"*. When the assertion is a **negative about a category**,
+probe the category (loop over candidate names), and prefer a byte-level check on a known artifact
+(`grep -c` on the binary) over a PATH lookup when the question is *what does this tool read*.
+**Source:** 2026-10-02.

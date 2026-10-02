@@ -61,6 +61,7 @@ Full protocol: [`docs/agentic/protocols/verification.md`](docs/agentic/protocols
 | A known trap | [`docs/agentic/traps/register.md`](docs/agentic/traps/register.md) |
 | Fourthwall API behaviour | [`docs/agentic/stack/fourthwall.md`](docs/agentic/stack/fourthwall.md) |
 | Stack, versions, environments | [`docs/agentic/stack/`](docs/agentic/stack/) |
+| **How a session starts / what CLIs exist** | [`docs/agentic/stack/environments.md`](docs/agentic/stack/environments.md#agent-entry-points--how-a-session-actually-starts) |
 | A repeatable procedure | [`docs/agentic/skills/`](docs/agentic/skills/) |
 | What happened in a past session | [`docs/agentic/sessions/`](docs/agentic/sessions/) |
 | The current release plan | [`docs/releases/plans/`](docs/releases/plans/) |

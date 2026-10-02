@@ -8,6 +8,41 @@ This file tracks the **KB**, not the application. The application's release reco
 
 ---
 
+## [1.3.0] — 2026-10-02
+
+### Added
+
+- **`stack/environments.md` → "Agent entry points — how a session actually starts."** The KB previously had
+  no answer to *"how do I start a session?"* — which meant the agent answered it from memory instead of
+  from a file. Now measured and written down: **the application UI is the only way to start a WorkBuddy
+  session**; the integrated terminal is a command surface *inside* a running session, not a launcher.
+- **The bundled-runtime inventory**, so nobody mistakes it for a CLI: `.workbuddy-ai/binaries/` holds
+  `PortableGit`, `node/22.22.2-3`, `python/3.13.12` — they serve the agent's Bash tool.
+
+### Fixed
+
+- **A false negative published in this repo's own report.** `docs/reports/2026-10-02-agent-usage-insights.md`
+  asserted **"No such CLI is installed on this machine."** Re-probing a wider set of names found
+  `claude` → **Claude Code `2.0.35`** on PATH. The claim was true about `codebuddy` and false about the
+  machine. Corrected in place, and the corrected scope is now *"no WorkBuddy CLI exists here, but Claude
+  Code does."* → [T33](traps/register.md#t33)
+
+  The report's Verification-status table gained a third verified row for the probe.
+
+### Documented — a known gap, not a surprise
+
+- **Claude Code reads `CLAUDE.md`, not `AGENTS.md`.** Byte-level probe of the `2.0.35` binary:
+  `grep -c "CLAUDE.md"` → **82**, `grep -c "AGENTS.md"` → **0**. A `claude` session opened in this repo
+  therefore sees **neither** the root `AGENTS.md` **nor** anything under `docs/agentic/` — the whole KB is
+  invisible to it. The bridge would be a one-line `CLAUDE.md` pointing at `AGENTS.md`; **deliberately not
+  created**, and recorded so the gap is known.
+- **Skill directories do not interoperate.** WorkBuddy reads `~/.workbuddy-ai/skills/` and
+  `<repo>/.workbuddy-ai/skills/`; Claude Code reads `.claude/`. Moving a skill between them is a
+  migration — which is the reason the ported skills live in `docs/agentic/skills/` as the vendor-neutral
+  copy.
+
+---
+
 ## [1.2.0] — 2026-10-02
 
 ### Fixed

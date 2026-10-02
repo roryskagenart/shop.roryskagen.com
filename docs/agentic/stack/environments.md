@@ -81,6 +81,48 @@ Safe habit: pull to `.env.pull.tmp` (matches the gitignored `.env*` pattern), co
 - `IMPORT_ADMIN_USER` (`rorystudio`, Config) and `IMPORT_ADMIN_PASSWORD` (Secret) exist in Production,
   Preview and Development. The password is a **temporary credential** — rotate when convenient.
 
+## Agent entry points — how a session actually starts
+
+Measured 2026-10-02 on this machine. This section exists because *"how do I start a session in bash?"* is a
+question the files should answer rather than the agent.
+
+| Surface | Starts a WorkBuddy session? | Detail |
+| :--- | :--- | :--- |
+| **The app UI** | ✅ **This is the only way** | New session from the application window. |
+| **Integrated terminal** | ❌ No | It is a terminal *inside* a running session for running commands. It does not launch one. |
+| `codebuddy` / `workbuddy` / `wb` CLI | ❌ Does not exist | See the negative probe below. |
+
+**Negative probe (all four return nothing):** `command -v codebuddy` · `codebuddy-code` · `wb` ·
+`workbuddy`. The install directory
+(`%LOCALAPPDATA%\Programs\WorkBuddyAI\`) contains an **Electron desktop app** (`WorkBuddyAI.exe`,
+`app.asar`, `resources/`) with **no CLI entry point**. `resources/scripts/` holds only
+`update-progress.ps1` and `launch-update-progress.vbs`; `resources/vendor/` holds the bundled
+`PortableGit.zip` / `node.zip` / `python.zip`. There is nothing to invoke from a shell.
+
+**What the bundled runtimes are** (`.workbuddy-ai/binaries/` — these exist to serve the agent's Bash tool,
+not to be a CLI): `PortableGit/versions`, `node/versions/22.22.2-3`, `python/versions/3.13.12`.
+
+### ⚠️ A *different* agent CLI is installed, and it does not read this repo's KB
+
+| Probe | Result |
+| :--- | :--- |
+| `command -v claude` | `/c/Users/jaden.black/.local/bin/claude` — **Claude Code `2.0.35`** |
+| `claude --help` | Interactive by default; `-p/--print` for non-interactive; `--agents <json>`, `--settings`, `--add-dir` |
+| `grep -c "CLAUDE.md" <binary>` | **82** |
+| `grep -c "AGENTS.md" <binary>` | **0** |
+
+> ⚠️ **Claude Code reads `CLAUDE.md`, not `AGENTS.md`.** The byte-level probe is decisive: the string
+> `AGENTS.md` does not occur in the `2.0.35` binary at all. So a `claude` session opened in this repo would
+> **not** see the root [`AGENTS.md`](../../../AGENTS.md) or anything under `docs/agentic/` — the entire KB
+> this repo maintains would be invisible to it. The bridge, if it is ever wanted, is a `CLAUDE.md` that
+> points at `AGENTS.md` (or a symlink). **Not created** — recorded here so the gap is a known gap rather
+> than a surprise.
+
+> ⚠️ **Skill directories do not interoperate either.** WorkBuddy reads `~/.workbuddy-ai/skills/` and
+> `<repo>/.workbuddy-ai/skills/`; Claude Code reads `.claude/`. Copying a skill between them is a
+> migration, not a move — which is exactly why the ported skills live in
+> [`../skills/`](../skills/README.md) as the vendor-neutral copy.
+
 ## Deploy paths
 
 | Path | Mechanism |

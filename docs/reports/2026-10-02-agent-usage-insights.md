@@ -401,24 +401,36 @@ destructive, the damage was real, and **nothing threw**.
 | Model token totals | deepseek-v4.1-flash 973.3M in | **Reported** |
 | **This repo's own gate baseline** | **`tsc` 0 errors · `vitest` 97 passed / 6 files** | ✅ **Re-derived locally on 2026-10-02** — see [`../agentic/stack/overview.md`](../agentic/stack/overview.md#testing) |
 | **This repo's prettier status** | **91 of 103 tracked files fail** | ✅ **Re-derived locally on 2026-10-02** — see [T31](../agentic/traps/register.md#t31) |
+| **Available agent CLIs** | **No WorkBuddy CLI; Claude Code `2.0.35` present** | ✅ **Re-derived locally on 2026-10-02** — see the correction below |
 
-> The only two rows marked verified are the ones measured directly against this repository. Everything
+> The three rows marked verified are the ones measured directly against this repository. Everything
 > else is the generator's arithmetic, reproduced without independent confirmation.
 
 ### Correction — one suggested command is not runnable here
 
-The **Headless Mode** card suggests `codebuddy -p "..."`. **No such CLI is installed on this machine.**
-Measured 2026-10-02: `command -v codebuddy` / `codebuddy-code` / `wb` all return nothing, and the install
-directory contains an Electron desktop app (`WorkBuddyAI.exe`), not a CLI entry point.
+The **Headless Mode** card suggests `codebuddy -p "..."`. **No WorkBuddy/CodeBuddy CLI is installed on
+this machine.** Measured 2026-10-02: `command -v codebuddy` / `codebuddy-code` / `wb` / `workbuddy` all
+return nothing, and the install directory contains an Electron desktop app (`WorkBuddyAI.exe`) with no
+CLI entry point. The example is a generic illustration from the generator, not a command verified against
+this environment. **Do not paste it and expect it to work.** Treat every `example_code` block in this
+report the same way — none was executed.
 
-The example is a generic illustration from the generator, not a command verified against this
-environment. **Do not paste it and expect it to work.** Treat every `example_code` block in this report the
-same way — none was executed.
+**But a different agent CLI *is* installed**, and the first version of this correction overstated the case:
 
-Also note: **an agent session is started from the application UI, not from a shell.** The integrated
-terminal is a terminal inside the app for running commands; it does not start a session. Running the
-preflight is therefore something you do *inside* a session — or by asking the agent to run it as its first
-action — not a way to begin one.
+| Probe | Result |
+| :--- | :--- |
+| `command -v claude` | `/c/Users/jaden.black/.local/bin/claude` — **Claude Code `2.0.35`**, 217 MB binary |
+| `claude --help` | `Usage: claude [options] [command] [prompt]` — interactive by default, `-p/--print` for non-interactive |
+
+So "no agent CLI exists here" is wrong; the accurate statement is **"no WorkBuddy CLI exists here, but
+Claude Code does."** The distinction matters because the two do not share a skill/plugin directory:
+`.workbuddy-ai/skills/` and `docs/agentic/` are consumed by WorkBuddy, while Claude Code reads
+`.claude/` — so this repo's KB is **not** automatically visible to a `claude` session.
+
+**An agent session is started from the application UI, not from a shell.** The integrated terminal is a
+terminal inside the app for running commands; it does not start a WorkBuddy session. Running the preflight
+is therefore something you do *inside* a session — or by asking the agent to run it as its first action —
+not a way to begin one.
 
 ---
 
