@@ -1,668 +1,881 @@
-# DRAFT — PR plan: v0.2.0 "Sellable Storefront"
+# DRAFT — PRD: v0.2.0 "Staged Catalogue"
 
 | | |
 | :--- | :--- |
-| **Status** | DRAFT — not approved, not started. Blocked on OQ1, OQ2, OQ3 |
-| **Author** | Buddy (agent) |
-| **Created** | 2026-10-01 |
-| **Supersedes** | nothing. Amends `lib/taxonomy.ts` (the merchandising design) |
-| **Depends on** | nothing merged. Touches the same new `docs/` tree as PR #2 — merge one first |
-| **Scope** | Re-scope the storefront to Fourthwall-fulfillable product/collection types, seed a 10-artwork catalogue, and stop the site advertising products that cannot be bought |
-| **Release** | `v0.2.0` — see OQ1, the version number is contested |
+| **Status** | DRAFT — not approved, not started. **Blocked on OQ1–OQ8** |
+| **Created** | 2026-10-01 · **re-scoped and re-measured 2026-10-02** |
+| **Supersedes** | the 2026-10-01 revision of this document ("Sellable Storefront") |
+| **Scope** | **Construct the sellable catalogue inside Fourthwall and leave it non-public.** Publishing is a separate release. |
+| **Release** | `v0.2.0` — see OQ7; the version number is contested (**T24**) |
 
-> This is a **draft**. It is written before any implementation so the design can be reviewed and
-> rejected cheaply. Nothing here is implemented. No product has been created or archived.
+> This is a **draft**. Nothing here is implemented. No product has been created or archived by this
+> document. The build it describes **has not been run.**
 
 ---
 
-## 0a. Decisions taken (2026-10-01)
+## 0. What this is, and what it is not
 
-Four questions were answered by Jaden. They are settled; the rest of this document reflects them.
+### The one-sentence goal
+
+> **After this release, the entire sellable catalogue exists inside Fourthwall and is unreachable by a
+> guest. Publishing it is a separate, deliberate, human-gated act that this release does not perform.**
+
+### Why the re-scope
+
+The 2026-10-01 revision put the catalogue build, the publication, and a front-end refactor into one gate
+sequence. That couples three risks with different blast radii — a bad create payload corrupts the
+catalogue, a bad publish exposes it, and a bad refactor breaks the storefront. **Building and publishing
+are separable, so they are separated.** The build is reversible. Publication is not.
+
+### In scope
+
+- **Building** 4 collections and up to 40 design products from **10 artworks**, through the Fourthwall
+  **Platform API**.
+- **Staging** every one of them in a non-public state, and **proving** they are non-public.
+- **Specifying** — but not executing — the launch gate that flips the catalogue live.
+
+### Explicitly NOT in scope
+
+| Not this release | Why |
+| :--- | :--- |
+| Any change to `app/**` or `components/**` | This release writes to Fourthwall, not to the storefront. |
+| Removing the fabricated-catalogue fallback (**T01**) | Deferred by decision, not oversight — see [§9](#9-do-not-do-yet). |
+| Publishing anything, or un-gating the shop | That is **Phase B**, a separate PRD with its own approval gate. |
+| The 15 originals | Structurally impossible via API — **T12**. Dashboard-only, permanently. |
+| `canvas-prints`, `metal-litho` | No wall-art template exists — **T13**. Structurally unfulfillable. |
+| The UX re-imagining | Deferred to Phase B, where it can be verified against a live catalogue. |
+
+---
+
+## 0a. Decisions taken
+
+### From Jaden, 2026-10-01
 
 | # | Decision | Consequence |
 | :--- | :--- | :--- |
-| OQ1 | **`v0.2.0`.** Continue the tag line. | T15 stays in scope: the `v1.x` roadmap labels in `brand-config.ts` / `docs-content.ts` must be relabelled so no document claims a current release that has no tag |
-| OQ2 | **Publish both hidden Austin Skyline products**, *and* confirm the shop's protection status | Verified — see §1.2. The gate covers browsing, **not `/checkout/`**. R2 is downgraded from "cannot be bought from" to a launch-readiness blocker |
-| OQ4 | **The $4,500 `gondeoleu` price is intentional — it is an original.** | It must **not** sit in `all` beside $22 mugs. It moves to the Originals/inquire surface (D4, OQ8). The slug typo is cosmetic and now optional |
-| OQ7 | **Rebuild the four mugs at Gate 3** to add 15oz/20oz | Gate 3 grows by one rebuild step plus a `PUT /collections/{id}/products` re-point |
+| **OQ1** | **`v0.2.0`.** Continue the tag line. | The `v1.x` roadmap labels in `brand-config.ts` / `docs-content.ts` must be relabelled (**T24**). |
+| **OQ2** | Publish both hidden Austin Skyline products; **verify the gate** | Verified — the gate covers browsing, **not `/checkout/`** (**T14**). |
+| **OQ4** | **The $4,500 `gondeoleu` price is intentional — it is an original.** | It must not sit in `all` beside $22 mugs. Slug typo is cosmetic and optional. |
+| **OQ7** | Rebuild the four mugs for 15oz/20oz | **Deferred to Phase B** by this re-scope — see §9. |
 
-**New scope added in the same answer** (Jaden, verbatim): *"please intelligently rename/reword/remove/
-reimagine shop ux, and congruency with Fourthwall patterns or conventions of high converting ecommerce."*
+### From Jaden, 2026-10-02 — the re-scope
 
-That is a **capability, not a footnote** — it is captured as **C8** in §2 and as T17–T21 in §5. It
-widens Phase B from "remove what is not sellable" to "make what remains behave like a shop that
-converts", including collection naming, copy, and product-page conventions. It does **not** widen the
-catalogue: the 10 artworks and the 4 collections stand.
-
----
-
-## 0. What this document is, and what it is not
-
-**Is:** a release plan for one front-end + catalogue release, grounded in the live Fourthwall shop as
-measured on 2026-10-01.
-
-**Is not:** a design for a new importer, a re-platforming, or a print-quality fix. The single largest
-constraint on this programme is the **source artwork**, and no code in this release changes it (§7 R1).
+| # | Decision | Consequence |
+| :--- | :--- | :--- |
+| **R1** | **This release constructs only.** Nothing is published. | Publication becomes its own PRD with its own approval gate. |
+| **R2** | Non-public state is achieved by **`publishOnCreate: false`** plus the shop-wide password gate. | Every product is created `HIDDEN` with zero extra calls. |
+| **R3** | **The Platform API builds the products; the dashboard creates the collections.** | See [D2](#d2--collections-are-created-in-the-dashboard-products-are-attached-by-api). |
+| **R4** | **No MCP server is enabled.** | Respects the deliberate baseline in `docs/agentic/mcp/README.md`. Revisit in Phase B or via OQ2. |
+| **R5** | The 1500px gate is **replaced by a per-region check**. | The blanket gate rejects 6 of the 10 chosen artworks by under 7%. See [D4](#d4--eligibility-is-per-region-not-a-blanket-1500px). |
 
 ---
 
 ## 1. Verified starting state
 
-Everything below was measured this session against the live shop, the live Storefront API, the live
-Platform API, or the working tree at `87cf568`. Appendix A carries the claim → evidence rows.
+**Re-measured 2026-10-02.** The KB in `docs/agentic/` was measured 2026-10-01; **where the two disagree,
+this document wins and the KB is stale** — see [Appendix B](#appendix-b--documentation-to-update).
 
-### 1.1 Local and remote agree
+### 1.1 Repo
 
-`git rev-parse HEAD` = `87cf5682026dc4d8475b880142471444a5fa6183` = `GET /repos/.../commits/main`.
-Working tree clean. Only tag: `v0.1.0`. No `CHANGELOG.md`. PR #2 (GitHub OAuth plan) is open as a draft
-and owns `docs/releases/plans/pr-gh-oauth_DRAFT.md` — the only plan-document precedent in the repo.
+| Fact | Value | Command |
+| :--- | :--- | :--- |
+| `HEAD` | **`0ef582e`** | `git rev-parse HEAD` |
+| Working tree | **clean** | `git status --short` → empty |
+| Branch | `main` = `origin/main` | `git rev-parse --abbrev-ref '@{u}'` |
+| Tags | **only `v0.1.0`** | `git tag -l` |
+| Tests | **97 passed / 6 files** | `vitest run` |
+
+> ⚠️ **`HEAD` moved from `87cf568` to `0ef582e` mid-session** — a fast-forward of the agentic-KB merge.
+> Every figure in the 2026-10-01 revision was taken at `87cf568`. Re-derive before citing (**T25**).
 
 ### 1.2 The shop, and exactly what the password gate covers
 
 | | |
 | :--- | :--- |
-| Shop | `Rory Skagen Art` (`sh_b63dd6c0-033c-4db8-916e-6adeb02a5fe5`) |
-| Domain / public domain | `roryskagenart-shop` / `shop.roryskagenart.com` |
-| **Status** | **`PASSWORD_PROTECTED`** — reported by `GET /shops/current`, and confirmed by HTTP |
-
-⚠️ **Corrected 2026-10-01 (Jaden reported a guest reaching checkout; verified, and he is right).** The
-gate is **not** shop-wide. Measured against `roryskagenart-shop.fourthwall.com` with a browser
-user-agent:
+| Shop | `Rory Skagen Art` — `sh_b63dd6c0-033c-4db8-916e-6adeb02a5fe5` |
+| Status | **`PASSWORD_PROTECTED`** — `GET /open-api/v1.0/shops/current` |
 
 | Path | Result |
 | :--- | :--- |
-| `/` | **302 → `/password`** |
-| `/products/the-martian-white-glossy-mug` | **302 → `/password`** |
-| `/collections/kitsch-cpg` | **302 → `/password`** |
-| `/cart` | **302 → `/password`** |
-| `/password` | 200 — *"Coming soon \| Rory Skagen Art"* |
-| **`/checkout`** | **301 → `/checkout/` → 200.** A real page: `<title>Checkout – Fourthwall</title>`, `<body id="app-checkout">`. **Not gated.** |
+| `/`, `/products/<slug>`, `/collections/<slug>`, `/cart` | **302 → `/password`** |
+| **`/checkout`** | **301 → `/checkout/` → 200 — UNGATED** (a real SPA) |
 | `/login`, `/account`, `/sign-in` | 403 |
-| `/robots.txt`, `/sitemap.xml`, `/platform/analytics.json` | 200 |
 
-So: **browsing is gated; checkout is open.** The earlier note in this repo's memory that the shop
-"cannot be bought from" was too strong. What is actually true:
+**⇒ The gate blocks DISCOVERY, not PURCHASE** (**T14**).
 
-- A guest cannot *discover* products on the gated host — every browse path bounces to `/password`.
-- A guest **can** reach `/checkout/`, and the Storefront cart API is live and token-authenticated
-  (`POST /v1/carts` with `storefront_token` → `400` only because a required `items` array was missing;
-  without the token → `401`). So **the purchase path is plausibly functional for real products.**
-- The `/password` page's canonical URL is `https://shop.roryskagenart.com/password`, i.e. Fourthwall
-  treats the **custom domain** as the canonical host of the gated storefront.
+> ⚠️ **This gate is on Fourthwall's host.** `shop.roryskagenart.com` resolves to Fourthwall's gated
+> storefront, not to the Next.js app. **The Next.js app is a separate deployment and is not covered by
+> this gate.** See [§2.7](#27--the-question-the-whole-design-rests-on) — this is the load-bearing
+> unknown of the entire release.
 
-**Consequence for this plan:** the gate blocks *discovery*, not *purchase*. That makes the front-end
-refactor the load-bearing piece — the Next.js app is the only ungated storefront — and it means R2 is a
-**launch-readiness** issue (nobody arriving cold sees a shop), not a hard blocker on checkout.
-
-### 1.3 What is actually in Fourthwall
+### 1.3 Live catalogue state
 
 **Collections — 3, all `PUBLIC`:**
 
 | Name | Slug | id | Products |
-| :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | ---: |
 | Kitsch CPG | `kitsch-cpg` | `col_qMf6-GzBQlytUmha907_Tg` | 4 |
 | featured | `featured` | `col_m7hZOp3nRpyUjhENpvl6Sw` | 1 |
 | All Products | `all` | `col_k2tFEAvQQfyoVF1PYIi7sg` | 5 |
 
-**Products — 8 records, of which 5 are visible to a customer:**
+**Products — 8 records, 5 customer-visible:**
 
-| Product | State | Access | Price | Note |
+| Product | state | access | Price | Note |
 | :--- | :--- | :--- | :--- | :--- |
-| `odoroita-sakana-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | 11oz only |
-| `the-martian-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | 11oz only |
-| `the-martian-ii-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | 11oz only |
-| `today-atomic-sunrise-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | 11oz only |
-| `gondeoleu` | AVAILABLE | PUBLIC | **$4,500.00** | see OQ4, OQ5 |
-| `austin-skyline-2019-white-glossy-mug` | AVAILABLE | **HIDDEN** | $22.00 | invisible on the storefront |
-| `austin-skyline-2019-comfort-colors-garment-dyed-heavyweight-t-shirt` | AVAILABLE | **HIDDEN** | $34.00 | invisible on the storefront |
-| `the-martian-white-glossy-mug` (2nd record) | SOLD_OUT | ARCHIVED | $22.00 | soft-deleted duplicate |
+| `odoroita-sakana-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | **11oz only** (**T06**) |
+| `the-martian-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | **11oz only** |
+| `the-martian-ii-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | **11oz only** |
+| `today-atomic-sunrise-white-glossy-mug` | AVAILABLE | PUBLIC | $22.00 | **11oz only** |
+| `gondeoleu` | AVAILABLE | PUBLIC | **$4,500.00** | an intentional original (**T09**) |
+| `austin-skyline-2019-white-glossy-mug` | AVAILABLE | **HIDDEN** | $22.00 | invisible on the Fourthwall host |
+| `austin-skyline-2019-comfort-colors-…-t-shirt` | AVAILABLE | **HIDDEN** | $34.00 | **the precedent for `apparel`** — see OQ4 |
+| `the-martian-white-glossy-mug` (2nd) | SOLD_OUT | ARCHIVED | $22.00 | soft-deleted by the `DELETE` probe (**T02**) |
 
-So the customer-facing catalogue is **5 products**: four $22 mugs and one $4,500 item. The tee and mug
-carrying *Austin Skyline 2019* — the artwork named in the brief — are currently **hidden**.
+### 1.4 ⚠️ What the KB says that is no longer true
 
-`unitPrice.value` is a **dollar amount**, not cents: `gondeoleu` reads `4500` and the Storefront API
-serves it as `$4500 USD`, while the mug's `unitCost` reads `5.95` against a $5.95 template base cost.
-This resolves an apparent 100× inconsistency between products; there is none.
+The most consequential finding of the research pass. Four KB claims are **contradicted or unsupported by
+the live OpenAPI specification**:
 
-### 1.4 What Fourthwall can produce — the live 25 templates
-
-`GET /open-api/v1.0/product-templates` returns **25** templates for this shop. The response also carries
-`total: 601`, which does **not** match the 25 returned and does not move when `size`/`page` change —
-treat `total` as the platform-wide catalogue count and the 25 as authoritative for this shop.
-
-| Method | Template | Template id | Base |
-| :--- | :--- | :--- | :--- |
-| SUBLIMATION | White Glossy Mug | `pro_4v5OfYhyRx62KW5b7Oj6Uw` | $5.95 |
-| SUBLIMATION | Snap Case for iPhone® | `pro_fur0cz31TDC0tRUiYzJXXw` | $12.95 |
-| SUBLIMATION | Men's Slides | `pro_qNudZcUDRb6bwV4IK3GxBA` | $32.50 |
-| SUBLIMATION | Men's High Top Canvas Shoes | `pro_y9TCXB9rQRizgS4WXaHHtg` | $43.00 |
-| SUBLIMATION | All-Over Print Drawstring Bag | `pro_9225cd05703244a291` | $15.25 |
-| UV | Hardcover Journal – Blank | `pro_-wHFTR2xRbO-5bYAvLSVng` | $15.50 |
-| UV | Hardcover Bound Notebook \| JournalBook® | `pro_SJmfUn0YSOOwCATTBEoQKw` | $12.71 |
-| UV | Sherpa Vacuum Tumbler & Insulator | `pro_tC5lJsKHR_qTF1VlrNpsoQ` | $18.95 |
-| ALL_OVER_PRINT | All-Over Print Backpack | `pro_149a5b8d86ae4219aa` | $32.95 |
-| ALL_OVER_PRINT | All-Over Print Fanny Pack | `pro_22456d0504af4ae38f` | $21.37 |
-| DTG | Gildan Ultra Cotton Long Sleeve T-Shirt | `pro_6ae602fcb22447bfbc` | $14.79 |
-| DTG | AS Colour Unisex Premium T-Shirt | `pro_EJBSRKhJSd2unv4ZnGKwdQ` | $16.32 |
-| DTG | Bella+Canvas Supersoft Hoodie | `pro_Tt13ahLqQmOs0lgYd-uRgw` | $31.06 |
-| DTG | Gildan Classic Hoodie | `pro_gUu4CvXsRm-BxogjB89KzA` | $22.20 |
-| DTG | Bella+Canvas Women's Micro Rib Raglan Baby Tee | `pro_ax_jlOVKTk--CLvnuKupgw` | $16.95 |
-| DTG | Stanley/Stella Women's Organic Crew Neck Sweatshirt | `pro_EfhZQjDdRDqvrbXEc6r9wA` | $32.88 |
-| DTFX | AS Colour Unisex Premium T-Shirt | `pro_3WAxijeHRa60iWOTsmDCeA` | $16.32 |
-| DTFX | Gildan Classic Crewneck Sweatshirt | `pro_60zZalF0S_qvXk3of8Sfeg` | $18.79 |
-| DTFX |  AS Colour Surf Cap | `pro_tm8d4qRXTX-v8IX-TAlbYg` | $20.84 |
-| DTFX | Bella+Canvas Supersoft Long Sleeve T-Shirt | `pro_6z4GUurATC2-mwQ_hms_5g` | $18.29 |
-| DTFX | Bella+Canvas Unisex Midweight Sweatpants | `pro_V7qS5M2SQheH2blj_fACEQ` | $36.50 |
-| DTFX | Bella+Canvas Women's Garment Dye Shorts | `pro_1BGgRpFrQCSYM5ErNQXkkA` | $24.75 |
-| EMBROIDERY | Flexfit Visor | `pro_79afd248d4ff4f6da4` | $18.50 |
-| EMBROIDERY | Bella+Canvas Baby Jersey Short Sleeve Tee | `pro_zq1WLUHfRSC2G8L6BNWZVA` | $14.21 |
-| EMBROIDERY | Gildan Classic Hoodie | `pro_955a8fc6bc9b4b068f` | $23.43 |
-
-⚠️ **The set changed mid-session.** An earlier call returned *Comfort Colors Garment-Dyed Heavyweight
-T-Shirt* ($15.45, DTG) and no Drawstring Bag; a later call returned the Drawstring Bag and no Comfort
-Colors. `page`/`size` do not change the result, so this is not pagination — the shop's available set is
-mutable. **The Comfort Colors tee is the template behind the live Austin Skyline tee**, so this matters.
-Consequence: **pin template ids in config and assert them at apply time; never resolve by name at run
-time.** See §7 R4.
-
-**There is no wall-art template.** No poster, no canvas, no metal print. `canvas-prints` and
-`metal-litho` are structurally unfulfillable — not a configuration gap.
-
-### 1.5 The front end today
-
-| Surface | File | Problem |
-| :--- | :--- | :--- |
-| Homepage hero | `app/[currency]/page.tsx:41-106` | Hard-codes "15 original monumental enamel masterworks", "$4k–$28k", "Complete Archive (137 Works)" |
-| Homepage chips | `app/[currency]/page.tsx:83-96` | Renders all 7 `PRODUCT_COLLECTIONS`, 5 of which have no products |
-| Homepage grid | `components/grid/three-items.tsx:49-52` | Sources `NEXT_PUBLIC_FW_COLLECTION` = `fine-art-originals`, a handle Fourthwall does not have |
-| B2B banner | `app/[currency]/page.tsx:144-193` | Advertises volume tiering, tax appraisals, murals — none of it a product |
-| Nav | `components/layout/navbar/index.tsx:30-44` | `getCollections()` returns 7 taxonomy + `all` + remote extras → 11 links |
-| Category page | `app/[currency]/collections/[handle]/page.tsx:141-146` | Prints "15 Certified Studio Originals Available" for a handle with no Fourthwall collection |
-
-**The load-bearing defect.** `getCollectionProducts()` (`lib/fourthwall/index.ts:359-426`) falls back to
-the **local catalogue** whenever Fourthwall returns nothing, and `getProduct()`
-(`lib/fourthwall/index.ts:431-465`) does the same. So:
-
-- `/USD/collections/fine-art-originals` renders 15 originals at $5,500–$28,000 that **have no Fourthwall
-  product**.
-- Each one opens a real product page with a variant selector and an add-to-cart button.
-- `addItem` (`components/cart/actions.ts:22-36`) calls Fourthwall with a variant id Fourthwall has never
-  seen; on failure `lib/fourthwall/index.ts:481-484` falls back to an **in-process `Map`** cart.
-- `redirectToCheckout` (`components/cart/actions.ts:103-118`) then sends the visitor to
-  `roryskagenart-shop.fourthwall.com/checkout/?cartId=…`.
-
-A visitor can therefore assemble a cart of $28,000 originals that exists only in one serverless
-instance's memory. **Nothing throws. Every page is 200.** This is the reason the release exists.
-
-⚠️ **Corrected 2026-10-01.** An earlier draft of this document said the product-detail fetch
-"always 404s". **That was wrong, and it matters.** Measured:
-
-| Call | Result |
+| KB claim | Reality (2026-10-02) |
 | :--- | :--- |
-| `GET /v1/products/the-martian-white-glossy-mug?storefront_token=…` | **200** — a real product resolves |
-| Same call, **no token** | 401 |
-| `GET /v1/products/greetings-from-austin?storefront_token=…` | **404 `OFFER_SLUG_NOT_FOUND_ERROR`** |
-| `GET /v1/products/nope-not-real?storefront_token=…` | 404 `OFFER_SLUG_NOT_FOUND_ERROR` |
+| `fourthwall.md` §3 — *"`PATCH`/`PUT /products/{id}` → 405 — **no update endpoint exists**"* | Narrowly true, misleading in effect. **`PUT /products/{id}/state` and `/availability` both exist.** |
+| **T04** — *"A collection cannot be renamed"*; *"Only `PUT /collections/{id}/products` is updatable"* | **`PUT /open-api/v1.0/collections/{collectionId}` exists** and accepts `name`, `description`, `offerIds`. |
+| `fourthwall.md` §3.4 — *"`POST /collections` is public the instant it returns. **There is no draft state to hide behind.**"* | **Half true.** A four-state collection model exists; **no API endpoint can set it** — but the **dashboard** creates collections **`Hidden` by default**. |
+| `fourthwall.md` §6 — *"`access: HIDDEN` … means the Storefront API does not serve it at all"* | **Asserted without a quoted command, and the docs do not say it.** The Storefront API returns `access` on every product and documents no filter. **This claim is load-bearing and unverified — [§2.7](#27--the-question-the-whole-design-rests-on).** |
 
-So only the **list** endpoint `/v1/products` 404s; the **detail** endpoint works. The fallback therefore
-fires for exactly the products that should not be on the site — a local-only slug is
-indistinguishable, at the API level, from a slug that never existed. That is the whole defect: **the app
-treats "Fourthwall says no such product" as "render it from local JSON anyway."**
+The KB's own rule applies: *"Re-measure before relying on it — vendor APIs change, and this document is
+dated for exactly that reason."* Correcting these is **T12/T13** and [Appendix B](#appendix-b--documentation-to-update).
 
-### 1.6 The artwork ceiling — the constraint that shapes everything
+### 1.5 ⚠️ Nine catalogue records have dead image URLs
 
-`lib/fourthwall/rory-artworks-data.json`: 137 records, 42 `Available`, 82 `Sold`, 13 `Archived`.
-All 137 are JPEG; width/height in the file are the true stored size.
+**Measured 2026-10-02** by GET against every one of the 137 records' `image.url`. **Nine 404; 128 resolve.**
 
-Ranked by shortest side, the top of the `Available` pool is:
+The correlation is perfect and mechanical: **all nine broken URLs use a placeholder `/v1/` upload-version
+segment** (`…/image/upload/**v1**/beat-bop.jpg`); **every one of the 128 working URLs carries a real
+version id** (`…/image/upload/**v1787076989**/2019today-copy.jpg`). 9/9 placeholders are dead; 0/128
+versioned URLs are. This is not a transient CDN fault — it is an unresolved upload version baked into the
+catalogue data.
 
-| # | Slug | Title | Series | Size | Shortest side |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `today` | Today (Atomic Sunrise) | Pop Surrealism | 2697×3851 | **2697** ✓ |
-| 2 | `odoroita-sakana` | Odoroita Sakana | Monsters & Kaiju | 2100×1571 | **1571** ✓ |
-| 3 | `the-martian-2` | The Martian II | Atomic Pop & Sci-Fi | 2100×1526 | **1526** ✓ |
-| 4 | `the-martian` | The Martian | Atomic Pop & Sci-Fi | 2100×1519 | **1519** ✓ |
-| 5 | `gondoleu` | Gondoleu | Monsters & Kaiju | 2100×1476 | 1476 |
-| 6 | `empopatya` | Empopatya | Monsters & Kaiju | 2100×1474 | 1474 |
-| 7 | `gianondor` | Gianondor | Monsters & Kaiju | 2100×1469 | 1469 |
-| 8 | `austin-2019` | Austin Skyline 2019 | Austin Iconic | 2100×1467 | 1467 |
-| 9 | `jobar` … `the-cats-of-the-colosseum-2` | — | Kaiju / Pop | 2100×1400–1454 | 1400–1454 |
-
-**Only 4 of 42 `Available` artworks clear the repo's own 1500px gate.** The 1500px rule is a *local*
-quality bar from Fourthwall's documentation, not a server rejection — the live Austin Skyline tee was
-created from a 2100×1467 source (short side 1467) and the rendered mockup is good.
-
-⚠️ **"Greetings from Austin" — the studio's most famous mural — is `Sold` and only 576×376.** It cannot
-be merchandised from this catalogue. Neither can `greetings-from-texas` (576×403), `78704` (576×402),
-`austin-postcard` (576×403) or `agave-patch` (576×360). Of the 6 `Available` Austin-iconic works, the
-only one above 800px is `austin-2019`. **The "Austin Iconic" merchandising promise is currently
-unfulfillable**, and this release must stop the site from making it.
-
----
-
-## 2. The product, decomposed
-
-Six capabilities. C1–C2 are the catalogue; C3–C6 are the storefront.
-
-| # | Capability | Release |
+| Slug | Status | Note |
 | :--- | :--- | :--- |
-| C1 | A **declarative merch catalogue** — 10 artworks × a defined template matrix × target prices × collection membership — as reviewable data, not script arguments | v0.2.0 |
-| C2 | A **seeding run** that creates the products and assigns them to collections, idempotently, with a verified count | v0.2.0 |
-| C3 | A **sellable taxonomy** — the storefront navigates only collection types Fourthwall can fulfil | v0.2.0 |
-| C4 | **Truthful surfaces** — no page renders a buy box for a product that has no Fourthwall variant | v0.2.0 |
-| C5 | **Content that matches the catalogue** — copy names only producible product types | v0.2.0 |
-| C6 | A **guard** that fails CI when a storefront surface links to a collection that does not exist in Fourthwall | v0.2.0 |
-| C7 | Extended product families — headwear, hoodies, tumblers, footwear, drawstring bag | v0.3.0 candidate |
-| C8 | **A shop that behaves like a shop** — collection names, copy and product-page conventions aligned to Fourthwall's own patterns and to high-converting ecommerce norms | v0.2.0 |
+| **`beat-bop`** | **`Available`** | **chosen artwork #10 (§C1)** |
+| **`the-cats-of-the-colloseum-2`** | **`Available`** | sellable, broken image |
+| `jungle-bust` | Sold | |
+| `jungle-tempo-2` | Sold | |
+| `mid-flight-connection` | Sold | |
+| `southern-belle` | Sold | |
+| `steamy-the-flavor-genie` | Sold | |
+| `the-cat-bird-seat` | Archived | |
+| `wise-bird` | Sold | |
 
-### 2.1 The 10 artworks (C1)
+> ⚠️ **This is a hard blocker for `beat-bop`, and it is not a build problem — it is a data problem.**
+> `publish-merch-to-fourthwall.ts:405` fetches `artwork.image.url`; against `beat-bop` that is a guaranteed
+> 404, so the build will throw rather than silently degrade. **Either source a replacement image for
+> `beat-bop` or substitute artwork #10.** The other 8 broken records are outside the ten, but one of them
+> (`the-cats-of-the-colloseum-2`) is also `Available` — so **two sellable artworks currently render a broken
+> image on the live site**, a defect worth fixing regardless of this PRD.
 
-The five already on merch are **fixed by the brief**. The other five are chosen for print resolution
-first, series spread second:
+---
 
-| # | Slug | Title | Series | Why |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | `the-martian` | The Martian | Atomic Pop & Sci-Fi | **on a live mug** |
-| 2 | `the-martian-2` | The Martian II | Atomic Pop & Sci-Fi | **on a live mug** |
-| 3 | `odoroita-sakana` | Odoroita Sakana | Monsters & Kaiju | **on a live mug** |
-| 4 | `today` | Today (Atomic Sunrise) | Pop Surrealism | **on a live mug**; best resolution in the catalogue |
-| 5 | `austin-2019` | Austin Skyline 2019 | Austin Iconic | **on a live mug and the live tee**; only usable Austin-iconic image |
-| 6 | `gondoleu` | Gondoleu | Monsters & Kaiju | 1476px; already has a live product (see OQ4/OQ5) |
-| 7 | `empopatya` | Empopatya | Monsters & Kaiju | 1474px; also a $16,000 original |
-| 8 | `gianondor` | Gianondor | Monsters & Kaiju | 1469px; also an $18,500 original |
-| 9 | `the-persistence-of-cats` | The Persistence of Cats | Pop Surrealism | 1440px; also a $14,500 original |
-| 10 | `beat-bop` | Beat Bop | Pop Surrealism | 1400px |
+## 2. The capability surface — what Fourthwall actually offers
 
-**Series spread: Kaiju 4 · Pop Surrealism 3 · Atomic Pop & Sci-Fi 2 · Austin Iconic 1.** The imbalance
-is forced by §1.6, not chosen. Three of the ten (`empopatya`, `gianondor`,
-`the-persistence-of-cats`) are also originals in `originals-data.json`, which gives an
-**original-plus-merch cross-sell** — the one productization angle the current site cannot express
-because its originals are not purchasable.
+**Researched 2026-10-02** from the published OpenAPI specs, `docs.fourthwall.com`, `help.fourthwall.com`,
+and the MCP tool reference. This section is the evidence base for every decision in §4.
 
-### 2.2 The sellable collections (C3) — 4, replacing 7
+### 2.1 ⭐ The visibility ladder — four states, and two independent axes
 
-Collection **names are chosen so the derived slug equals the taxonomy handle**, so
-`getCollectionProducts('<handle>')` hits Fourthwall and returns real products with **no code change**.
-The slug derives from `name`; there is no collection-update endpoint for name or description.
-
-| # | Name → slug | State | Templates | Artworks | Products |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `kitsch-cpg` | **EXISTS** | White Glossy Mug | all 10 | 10 |
-| 2 | `apparel` | NEW | Comfort Colors Garment-Dyed Heavyweight T-Shirt | all 10 | 10 |
-| 3 | `desk-art` | NEW | Hardcover Journal + Snap Case for iPhone® | top 5 | 10 |
-| 4 | `everyday-carry` | NEW | All-Over Print Backpack + Fanny Pack | top 5 | 10 |
-
-**Top 5** = `today`, `odoroita-sakana`, `the-martian-2`, `the-martian`, `gondoleu` — the five
-highest-resolution sources, which is also the five the current mugs already prove.
-
-**Target retail prices** (margin = target − template base; `profitMargin` is a USD amount over base
-cost, and is **per product, not per variant**):
-
-| Template | Base | Target | Margin |
+| Axis | Field | Values | Meaning |
 | :--- | :--- | :--- | :--- |
-| White Glossy Mug | $5.95 | $22.00 | $16.05 |
-| Comfort Colors Heavyweight Tee | $15.45 | $34.00 | $18.55 |
-| Hardcover Journal | $15.50 | $32.00 | $16.50 |
-| Snap Case for iPhone® | $12.95 | $28.00 | $15.05 |
-| All-Over Print Backpack | $32.95 | $58.00 | $25.05 |
-| All-Over Print Fanny Pack | $21.37 | $38.00 | $16.63 |
+| **Visibility** | `access` | `PUBLIC` · `HIDDEN` · `PRIVATE` · `ARCHIVED` | Who can reach it |
+| **Stock** | `state` | `AVAILABLE` · `SOLD_OUT` | Whether it can be bought |
 
-⚠️ Because the margin is per product, a single margin cannot hit one target across sizes. At $16.05 the
-mug lands at **$22.00 / $24.55 / $26.55** for 11oz / 15oz / 20oz. Either accept the ladder or set the
-margin from the 15oz target — **OQ6**.
+Conflating these two is the central trap of this area. `OfferAccessV1.discriminator.mapping` →
+`PUBLIC, HIDDEN, PRIVATE, ARCHIVED`; `OfferStateV1.discriminator.mapping` → `AVAILABLE, SOLD_OUT`.
 
-**Total: 40 products** — 5 live and public, 2 live and hidden, 33 new — across 4 collections.
+**What each visibility state actually does:**
 
-**Out of scope for v0.2.0 (C7, recommended v0.3.0):** Sherpa Tumbler (UV $18.95), AS Colour Surf Cap
-(DTFX $20.84), Bella+Canvas Supersoft Hoodie (DTG $31.06), Men's Slides ($32.50), Men's High Top Canvas
-Shoes ($43.00), All-Over Print Drawstring Bag ($15.25), and the DTFX/EMBROIDERY variants of garments
-already covered by a DTG template.
+| State | Shop listing | Direct URL | Purchasable | Documented use |
+| :--- | :--- | :--- | :--- | :--- |
+| **`PRIVATE`** | ✗ | **✗ no public URL at all** | ✗ | *"work on an internal draft before a product is ready to launch"* |
+| **`HIDDEN`** | ✗ | ✓ **still viewable** | **✓ still purchasable** | *"a soft launch or a private campaign"* |
+| `PUBLIC` | ✓ | ✓ | ✓ | live |
+| `ARCHIVED` | ✗ | ✗ | ✗ | retired; **frees the slug** |
 
-### 2.3 C8 — the UX reimagining, scoped
+> ⚠️⚠️ **`HIDDEN` is not a safe draft state.** Fourthwall's own documentation states a hidden product's
+> *"direct link still works and it can still be purchased."* Anyone holding a URL can buy. **`PRIVATE`
+> is the only genuinely unreachable state — and the Platform API cannot set it** (§2.3).
 
-"Rename / reword / remove / reimagine" is four different jobs. Kept concrete:
+**Collection states** are the same four names (`CollectionStateV1`) and are **readable but not writable**
+through the API (§2.6.2).
 
-**Rename.** ⚠️ A collection's slug derives from its name and **cannot be changed** — only its product
-list can. So renaming a live collection means recreating it, which leaves the old one PUBLIC and
-orphaned, and `getCollections()` (`index.ts:353-356`) appends any Fourthwall collection that is not
-already in the taxonomy — so an orphan would **still appear in the nav**. **Do not rename by
-recreating.** Instead: the taxonomy already wins over a colliding Fourthwall name — that behaviour is
-asserted in `collections.test.ts` ("prefers the taxonomy title over a colliding Fourthwall collection").
-So present shopper-facing titles from `lib/taxonomy.ts` (`kitsch-cpg` → *"Mugs & Drinkware"*) while the
-slug stays `kitsch-cpg`. For the three **new** collections, choose a name that is both shopper-facing and
-slug-clean: *Apparel* → `apparel`, *Desk & Studio* → `desk-studio`, *Bags & Carry* → `bags-carry`. Name
-and slug must be decided **before** the create call, because there is no second chance.
+### 2.2 ⭐ The write-surface matrix
 
-**Reword.** The current copy is a wish-list: §1.6 of the taxonomy names ~23 product types of which only
-a handful exist as templates. Delete `metal-litho`, `canvas-prints` and every "planned product" line.
-Then add the conventional signals the site has none of: materials, care, sizing guidance, shipping
-expectation, returns, and a real "ships from" statement. The product description already available from
-Fourthwall (`merchDescription()` in `lib/fourthwall/merch.ts:112-115`) is a start, not a finish.
+Four surfaces can write. They are **not** equivalent, and the differences decide the architecture.
 
-**Remove.** The B2B banner's tax appraisals, murals and volume tiering (`app.tsx:144-193`); "Complete
-Archive (137 Works)"; the "15 Certified Studio Originals Available" badge; the `$4k–$28k` hero.
+| Operation | Dashboard | Platform API | Official MCP | Eli Actions |
+| :--- | :---: | :---: | :---: | :---: |
+| Create a design product | ✓ | ✓ `POST /products` | ✓ | ✓ *(Pro)* |
+| Create a **manual, priced** product | ✓ | **✗** | digital only | ? |
+| Set product **`PUBLIC`/`HIDDEN`** | ✓ | ✓ `PUT /products/{id}/state` | ✓ | ✓ *("mark all products public")* |
+| Set product **`PRIVATE`** | ✓ | **✗ not reachable** | ? | ? |
+| Archive a product | ✓ | ✓ `DELETE /products/{id}` | ✓ | ? |
+| Update product **name / description / price** | ✓ | **✗** | ✓ `update-offer` | ? |
+| Update product **slug** | ✓ | **✗** | ✓ `update-offer-slug` | ? |
+| Update **variant prices in bulk** | ✓ | **✗** | ✓ `bulk-update-offer-variant-prices` | ? |
+| Create a collection | ✓ *(Hidden by default)* | ✓ *(state not settable)* | ✓ | ? |
+| Update collection **name / description** | ✓ | ✓ `PUT /collections/{id}` | ✓ | ? |
+| Set collection **state** | ✓ *(+ Schedule as Public)* | **✗ no endpoint** | ✓ `update-collection-state` | ? |
+| Set collection **availability** | ✓ | ✓ `PUT /collections/{id}/availability` | ✓ | ? |
+| Set a collection's **product list** | ✓ | ✓ `PUT /collections/{id}/products` | ✓ | ? |
+| Take the shop live / password it | ✓ | **✗** | ✓ `update-shop-site-status` | ? |
 
-**Reimagine.** A product page that follows what shoppers expect and what Fourthwall's own storefront
-does: mockup-led gallery (Fourthwall renders the mockups — the site currently shows the flat artwork),
-a variant selector that reflects **real** Fourthwall variants (size and colour), price and add-to-cart
-above the fold, breadcrumbs, related products from the same collection, and — for anything not backed by
-a Fourthwall product — an **inquire** state instead of a cart button (T12).
+Cells marked `?` are documented tools whose **parameters are unverified** — the MCP tool reference
+publishes **names and one-line descriptions only, no argument schemas**, and the server requires OAuth
+(`POST https://mcp.fourthwall.com` → **401** with a `WWW-Authenticate: Bearer resource_metadata=…`
+challenge, so `tools/list` is not publicly discoverable).
 
-**Fourthwall congruency.** The checkout is Fourthwall-hosted and open (§1.2), so the app's job ends at
-handing over a valid `cartId`. The two storefronts should read as one brand: the app should adopt the
-host's own collection and product naming rather than inventing a parallel vocabulary, and should not
-promise capabilities the host does not have.
+> **The decisive rows are `PRIVATE` and collection *state*.** The API can create a product hidden; only
+> the **dashboard** can make it truly unreachable or set a collection's visibility. That is why R3
+> splits the work across both.
 
-⚠️ **Explicit non-goal:** C8 does not restyle the site. It changes information architecture, naming and
-copy, and it is bounded by what the seeded catalogue can actually deliver.
+### 2.3 The API lifecycle endpoints (exact)
+
+| Endpoint | Body | Note |
+| :--- | :--- | :--- |
+| `POST /open-api/v1.0/products` | `publishOnCreate` (bool) | **Defaults to `false`** — *"The product is created hidden unless `publishOnCreate` is true."* |
+| `PUT /open-api/v1.0/products/{id}/state` | `{"state":"PUBLIC"\|"HIDDEN"}` | *"Only `PUBLIC` and `HIDDEN` are reachable via this endpoint — use `DELETE` to archive."* |
+| `PUT /open-api/v1.0/products/{id}/availability` | `{"available":bool}` | Stock axis; preserved across a state transition. |
+| `DELETE /open-api/v1.0/products/{id}` | — | **Soft** delete → `ARCHIVED`. Frees the slug. |
+| `POST /open-api/v1.0/collections` | `name`, `description`, `offerIds[]` | **No state field.** |
+| `PUT /open-api/v1.0/collections/{id}` | `name?`, `description?`, `offerIds?` | **All optional.** |
+| `PUT /open-api/v1.0/collections/{id}/availability` | `{"available":bool}` | Documented only as *"toggle availability"*. |
+| `PUT /open-api/v1.0/collections/{id}/products` | `{"offerIds":[…]}` | **Full replacement, not an append** — **T05**. |
+
+### 2.3a ⚠️ Rate limits — a real constraint, not a footnote
+
+The **default** is 100 requests / 10 seconds per shop, but the write endpoints this release depends on
+are far tighter, and they are what govern the build:
+
+| Endpoint | Limit |
+| :--- | :--- |
+| **`POST /products`** | **5 requests / minute** |
+| **`POST /customizations`** | **5 requests / minute** |
+| **`POST /media/upload-url`** | **20 requests / minute** |
+| Everything else | 100 / 10 seconds |
+
+> ⚠️ **40 products is therefore an ~8-minute minimum build**, before the asynchronous mockup renders
+> complete. 429 bodies are `OPEN_API_TOO_MANY_REQUESTS`.
+>
+> **⇒ The build needs deliberate pacing and 429 backoff.** An earlier revision of this document called
+> rate limiting "a non-risk" — **that was wrong**, and a naive loop over 40 products will fail partway
+> through and leave a half-built catalogue (**R2**). This is also a hard argument for the build being
+> **resumable**, which is what idempotency by name already gives it.
+
+### 2.4 The official MCP server
+
+`https://mcp.fourthwall.com` · Streamable HTTP · **OAuth 2.0** · read **and** write · **available on all
+plans** (the help centre states this explicitly). Docs launched **April 2026**; the write/management
+tools were documented in **June 2026**.
+
+It adds write capability the Platform API lacks: `ecommerce_update-offer`,
+`ecommerce_update-offer-slug`, `ecommerce_update-offer-variant`,
+`ecommerce_bulk-update-offer-variant-prices`, `ecommerce_update-collection-state`,
+`ecommerce_update-collection-details`, `ecommerce_update-shop-site-status`, plus a design/draft pipeline
+(`ecommerce_generate-product-design-previews`, `ecommerce_get-draft-attributes`,
+`ecommerce_apply-draft-to-product`) and brand tools (`brand_from_url`, `brand_extract_assets`,
+`image_remove_background`).
+
+> **It is not a strict superset.** REST already covers create, publish/unpublish, availability and
+> archive — everything this release needs. MCP's marginal value is **product-detail, slug and variant-price
+> editing**, which a build-only release does not require. **The gap is narrower than it first appears** —
+> which strengthens [D6](#d6--no-mcp-server-is-enabled) rather than weakening it.
+
+### 2.5 Eli, and the agentic surface — what shipped, and when
+
+| Feature | What it does | Shipped |
+| :--- | :--- | :--- |
+| **Eli** (dashboard assistant) | *"generate a full product line from a single design"*; bulk settings ops; promotions | Beta to all, ~**May 2026** |
+| **Eli Actions** | Bulk ops from plain language — *"mark all my products as public"*, *"hide all out-of-stock products"* | help page **2026-05-27** |
+| **ChatGPT & Claude app** | *"Create new merch — 'Create a t-shirt with this design'"* | **July 2026** |
+| Title & description generator | AI product copy | **2026-05-01** |
+| Adobe Express in Product Designer | Background removal, effects, crop | **2026-08-07** |
+| Create design products (the pipeline) | Artwork → mockups → purchasable product | **May 2026 — labelled Beta** |
+| **Official MCP server** | Agent access to the shop | docs **April 2026**, write tools **June 2026** |
+
+> ⚠️ **Eli is documented as a Fourthwall *Pro* feature** on its help page, while the marketing FAQ says
+> it is *"included with every Fourthwall account."* **Unresolved conflict — OQ5 depends on it.** The MCP
+> server has no such caveat.
+
+> **Eli Actions is the natural launch-flip tool**: the operation this release must specify but not perform
+> is precisely a bulk visibility change. It is also the **least auditable** option, which is why it is a
+> recommendation, not a decision — **OQ5**.
+
+### 2.6 ⚠️ What no API can do — the constraints this design must respect
+
+1. **A product's `name`, `description` and price are immutable via the Platform API.** The sanctioned fix
+   is the dashboard; the API-only workaround is archive + recreate, leaving an archived duplicate
+   (**T03**).
+2. **A collection's visibility state cannot be set by the Platform API.** `POST /collections` accepts no
+   state field and **its default state is not documented**. The dashboard, by contrast, **creates
+   collections `Hidden` by default** and offers **"Schedule as Public"**.
+3. **`PRIVATE` is unreachable from the Platform API** for products and collections alike.
+4. **The shop's live/password status is dashboard-only** (or MCP). No API endpoint can change it.
+5. **Manual, priced products cannot be created by the API at all** — **T12**.
+6. **There is no wall-art template** among the shop's 25 — **T13**.
+7. **The template list is mutable** — **T07**.
+8. **Write operations require `Manager` or `Super Admin`** permission.
+
+> **On `available`:** `PUT /collections/{id}/availability` is documented only as *"toggle availability"*.
+> The help centre lists *"marked as sold out"* as a **separate** collection toggle, which suggests
+> `available: false` means **sold-out, not unlisted**. **Do not use `available` as a visibility control.**
+> (Inference, flagged — OQ-verify.)
+
+### 2.7 ⭐ The question the whole design rests on
+
+> **Does the Storefront API serve `HIDDEN` products and collections?**
+
+Everything above assumes that staging in Fourthwall keeps items off every public surface. **That
+assumption is not documented, and the evidence points both ways:**
+
+| Evidence it is safe | Evidence it is not |
+| :--- | :--- |
+| The Fourthwall **host** is password-gated, so `/products/<slug>` → 302 → `/password`. | `GET /v1/collections` is documented as *"Returns **all** collections"* — with **no visibility filter**. |
+| The KB asserts *"`access: HIDDEN` … means the Storefront API does not serve it at all"*. | That assertion carries **no quoted command**, and the docs never say it. |
+| | Product objects returned by the Storefront API **carry an `access` field** — which would be pointless if non-public items were never returned. |
+| | Only the built-in **`all`** collection is documented as *"all **public** products"*. That is the single explicit exclusion statement in the docs — and its narrowness is itself a warning. |
+
+**Why it is load-bearing, twice over:**
+
+1. **The Next.js app reads the Storefront API** and is **not behind Fourthwall's password gate**. If the
+   API serves hidden items, the 40 staged products and 4 staged collections become visible on the app.
+2. **`getCollections()`** (`lib/fourthwall/index.ts:353-356`) **appends any Fourthwall collection not in
+   the taxonomy** — so a staged `everyday-carry` would appear in the nav regardless of its state.
+
+**⇒ This is `T00`, it is a Gate-0 blocker, and it is the first thing anyone should measure.** It is a
+read-only probe: create **nothing**, fetch `GET /v1/collections` and `GET /v1/collections/{slug}/products`
+with the storefront token, and check whether the two **already-existing `HIDDEN`** products
+(`austin-skyline-2019-…`) appear. That costs nothing and settles the design.
 
 ---
 
-## 3. Design decisions
+## 3. The product, decomposed
 
-**D1 — The catalogue is data, not script flags.**
-`lib/fourthwall/merch-catalog.ts` exports the 10-slug allowlist, the template matrix (with **pinned
-template ids**), target prices, and collection membership. Rejected: passing `--only`/`--template`
-per run. The existing CLI resolves templates by name against a set that changed mid-session (§1.4) and
-creates one template per invocation, which cannot express a 40-product matrix.
+### C1 — The 10 artworks
 
-**D2 — Collection membership is declarative, via `PUT /collections/{id}/products`.**
-Verified in the authoritative docs: `PUT /open-api/v1.0/collections/{collectionId}/products`,
-body `{ "offerIds": ["<uuid>", …] }`, scope `offer_write`, and the docs state it **"sets the full list
-of product IDs in the collection"**. Rejected: create-collections-last with `offerIds` on
-`POST /collections`. Both work, but the PUT form is re-runnable — it repairs a partial run instead of
-duplicating a collection, and collections cannot be renamed or deleted.
+Five are fixed by the brief (the art already on mugs and tees); five are chosen. All ten are `Available`,
+all JPEG, **all 2100px wide**.
 
-**D3 — Merchandise the 10 artworks; do not attempt to sell the originals through the API.**
-Rejected: extending the design pipeline to originals. `POST /products` accepts no `price`, `variants`,
-`slug`, `stock` or `images`; the only route for a priced one-of-one is a **dashboard-only manual
-product**. Rejected: leaving the 15 originals browsable as-is — that is §1.5's defect.
+| # | Slug | Dimensions | Short side | 1500px gate | Series | Origin? |
+| :-- | :--- | :--- | ---: | :---: | :--- | :---: |
+| 1 | `today` | 2697×3851 | 2697 | **PASS** | Pop Surrealism & Folklore | |
+| 2 | `odoroita-sakana` | 2100×1571 | 1571 | **PASS** | Monsters & Kaiju | |
+| 3 | `the-martian-2` | 2100×1526 | 1526 | **PASS** | Atomic Pop & Sci-Fi | |
+| 4 | `the-martian` | 2100×1519 | 1519 | **PASS** | Atomic Pop & Sci-Fi | ✓ |
+| 5 | `gondoleu` | 2100×1476 | 1476 | fail — 98.4% | Monsters & Kaiju | |
+| 6 | `empopatya` | 2100×1474 | 1474 | fail — 98.3% | Monsters & Kaiju | ✓ |
+| 7 | `gianondor` | 2100×1469 | 1469 | fail — 97.9% | Monsters & Kaiju | ✓ |
+| 8 | `austin-2019` | 2100×1467 | 1467 | fail — 97.8% | Austin Iconic & Texas Pop | ✓ |
+| 9 | `the-persistence-of-cats` | 2100×1440 | 1440 | fail — 96.0% | Pop Surrealism & Folklore | ✓ |
+| 10 | `beat-bop` | 2100×1400 | 1400 | fail — 93.3% | Pop Surrealism & Folklore | |
 
-**D4 — The storefront becomes two surfaces: *Shop* (buyable) and *Originals* (inquire).**
-Originals keep a single hero + an inquiry CTA and a link to the studio portfolio; they stop being a
-15-item purchasable grid. Rejected: deleting originals from the site — the artist's actual business is
-originals, and one real manual listing already exists.
-**Confirmed by OQ4:** `gondeoleu` at $4,500 is a genuine original listing, not a pricing error. So the
-Originals surface is not hypothetical — it has one live product today. It must also be **removed from
-the `all` collection**, where it currently sits beside $22 mugs, and re-homed. Note that a manual
-product is dashboard-only, so this half of the store is maintained by hand, not by the seeding script.
+Rows 1–4 are the live mugs; row 8 is on the live mug **and** the live tee. Rows 5–7 and 9–10 are chosen
+for **series balance** (4 Kaiju, 3 Pop Surrealism, 2 Atomic, 1 Austin Iconic) and because each already
+has a catalogue record.
 
-**D5 — Rebuild the four live mugs with explicit sizes.**
-The live mugs carry a single `White, 11oz` variant because `sizes` was omitted at create time. There is
-no update endpoint, but archiving **releases the slug**, so a rebuild is clean and the collection is
-re-pointed with D2's PUT. Rejected: leaving 11oz-only — it forfeits the 15oz/20oz upsell on the one
-product that is already selling. **Owner decision: OQ7.**
+> ⚠️ **Row 10 (`beat-bop`) cannot ship as-is — its image URL is 404 (§1.5).** The measured substitute
+> changes this split to **1 Austin / 2 Pop / 5 Kaiju / 2 Atomic**; see **OQ8**, which also shows the
+> series-balance and ≥1400px constraints cannot both be satisfied.
+
+> ⚠️ **Six of the ten fail the repo's 1500px heuristic by between 1.6% and 6.7%.** The KB already records
+> that the gate is *"a quality heuristic, not a hard constraint"* and that *"real products were created
+> from a 2100×1467 source and the mockups looked good."* **This is the largest open question in the
+> document — [D4](#d4--eligibility-is-per-region-not-a-blanket-1500px) and OQ1.**
+
+> ⚠️ **"Greetings from Austin" — the studio's most famous mural — is `Sold` at 576×376.** It cannot be
+> merchandised from this catalogue. Of the 6 `Available` Austin-iconic works, only `austin-2019` exceeds
+> 800px. **The "Austin Iconic" promise is a sourcing problem, not an engineering one.**
+
+### C1a — Source masters: measured, and they do not rescue the gate
+
+A batch of 27 candidate source images was supplied for comparison on **2026-10-02** and measured
+(`.workbuddy-ai/scripts/full-match.py`, `quality-diff.py`). Two questions were asked; both now have
+evidence-backed answers.
+
+**Q1 — is any local file higher-resolution than the catalogue? No.** 22 of 27 are the *same artwork at
+the identical pixel dimensions* — perceptual-hash distance **0–1 of 128 bits**, i.e. the same image, not
+merely a similar one. Nine of the ten artworks above have a local master:
+
+| # | Slug | Local master | Dimensions | Higher-res? |
+| :-- | :--- | :--- | :--- | :---: |
+| 1 | `today` | `2019today-copy.jpg` | 2697×3851 | no — identical |
+| 2 | `odoroita-sakana` | `OdoritaSakana.jpg` | 2100×1571 | no — identical |
+| 3 | `the-martian-2` | `themartian2-copy.jpg` | 2100×1526 | no — identical |
+| 4 | `the-martian` | `themartian1-copy.jpg` | 2100×1519 | no — identical |
+| 5 | `gondoleu` | `gondeoleu.jpg` | 2100×1476 | no — identical |
+| 6 | `empopatya` | `empopatya.jpg` | 2100×1474 | no — identical |
+| 7 | `gianondor` | `gianondor.jpg` | 2100×1469 | no — identical |
+| 8 | `austin-2019` | `austin2019-copy.jpg` | 2100×1467 | no — identical |
+| 9 | `the-persistence-of-cats` | `2019cats-copy.jpg` | 2100×1440 | no — identical |
+| 10 | `beat-bop` | **none** | — | **and its CDN URL is dead (§1.5)** |
+
+> ⚠️ **This closes the "maybe the masters are bigger" branch of OQ1.** The six failing artworks still fail.
+> **The only real fix remains sourcing new 300 DPI scans.**
+
+**Q2 — are the local files better *quality*? Yes, substantially — and the build currently uses the worse
+copy.** Local files are JPEG quality ≈**98**; the Cloudinary-served catalogue copies are quality **71–93**
+(mean 85). Peak per-pixel deltas reach **158/255**, with PSNR as low as **26 dB** (`pollockjr`). These are
+not rounding differences; they are visible re-encode artifacts.
+
+This matters because **`scripts/publish-merch-to-fourthwall.ts:405` uploads `artwork.image.url`** — the
+compressed CDN copy, never a local master. So every product this build creates inherits the q85 re-encode.
+
+*Recommendation:* **point the build at the local masters for the 9 artworks that have one** (a source-path
+change, not a new pipeline), and keep the CDN URL as the fallback. This buys real print quality at zero
+API cost. It does **not** change the pixel count, so D4 and OQ1 stand unchanged.
+
+### C2 — The 4 collections
+
+Four collections replace the 7 taxonomy handles. **Each name is chosen so its derived slug equals the
+existing taxonomy handle**, because the slug derives from `name` and the taxonomy is the source of truth
+for the nav.
+
+| Collection name | Derived slug | Taxonomy handle | Products |
+| :--- | :--- | :--- | ---: |
+| `Kitsch CPG` | `kitsch-cpg` | `kitsch-cpg` — **exists** (`col_qMf6-GzBQlytUmha907_Tg`) | 10 |
+| `Apparel` | `apparel` | `apparel` — roadmap | 10 |
+| `Desk Art` | `desk-art` | `desk-art` — roadmap | 10 |
+| `Everyday Carry` | `everyday-carry` | **⚠️ no handle exists** | 10 |
+
+> ⚠️ **`everyday-carry` has no `lib/taxonomy.ts` entry**, which puts one code file in scope for a release
+> that is otherwise Fourthwall-only. **OQ3.**
+
+### C3 — The product matrix
+
+10 artworks × 4 product types = **40 products**, from **6 templates**.
+
+| Collection | Template | Template id | Base | Target | Margin |
+| :--- | :--- | :--- | ---: | ---: | ---: |
+| `kitsch-cpg` | White Glossy Mug | `pro_4v5OfYhyRx62KW5b7Oj6Uw` | $5.95 | `$22.00` | $16.05 |
+| `apparel` | **⚠️ Comfort Colors Tee — id unknown** | *unrecovered* | ~$15.45 | `$34.00` | ~$18.55 |
+| `desk-art` | Hardcover Journal – Blank | `pro_-wHFTR2xRbO-5bYAvLSVng` | $15.50 | `$32.00` | $16.50 |
+| `desk-art` | Snap Case for iPhone® | `pro_fur0cz31TDC0tRUiYzJXXw` | $12.95 | `$28.00` | $15.05 |
+| `everyday-carry` | All-Over Print Backpack | `pro_149a5b8d86ae4219aa` | $32.95 | `$58.00` | $25.05 |
+| `everyday-carry` | All-Over Print Fanny Pack | `pro_22456d0504af4ae38f` | $21.37 | `$38.00` | $16.63 |
+
+> ⚠️ **The Comfort Colors tee is not in the current 25-template list.** It appeared in one call and was
+> replaced by a Drawstring Bag in the next (**T07**) — yet the live tee product exists, so the template
+> existed. **Recovering its id is a Gate-1 blocker (T02).** Two routes: read it off the existing
+> `austin-skyline-2019-comfort-colors-…` product record, or re-fetch the template list until it
+> reappears. Fallback: **AS Colour Unisex Premium T-Shirt** (`pro_EJBSRKhJSd2unv4ZnGKwdQ`, DTG, $16.32).
+
+> ⚠️ **Enumerate templates by paging, not by name.** `GET /product-templates/page/{page}` is **1-indexed
+> with no page-size parameter**; iterate until you have collected `total`. Use `GET
+> /product-templates/{productId}` for the full record. **`productId` is the stable key** — `name` is not
+> unique, and the summary's `thumbnail` is imgproxy-generated and explicitly **not durable**.
+
+> ⚠️ **Every price is a `profitMargin` over a base cost that must be re-read at build time.**
+> `profitMargin` is a **USD amount**, not a percentage and not a final price
+> (`lib/fourthwall/merch.ts:188-196`). `profitMarginForTarget()` already converts correctly and returns
+> `null` rather than creating an unsellable product.
+
+> ⚠️ Because the margin is **per product, not per variant**, one margin cannot hit one price across sizes.
+> At $16.05 the mug lands at **$22.00 / $24.55 / $26.55** for 11oz / 15oz / 20oz. **OQ6.**
+
+### C4 — The staged build
+
+All 40 products are created with **`publishOnCreate: false`**, leaving each `HIDDEN`. No publishing call
+is made. The build is **idempotent**, **dry-runnable by default**, and **resumable** (§2.3a).
+
+### C5 — The launch gate (specified here, executed in Phase B)
+
+| Step | Operation | Surface |
+| :--- | :--- | :--- |
+| 1 | Verify every product reads `HIDDEN` and every collection resolves | Storefront API, cache-busted |
+| 2 | Flip products `HIDDEN` → `PUBLIC` | `PUT /products/{id}/state` ×40, or Eli Actions |
+| 3 | Flip collections `Hidden` → `Public` | Dashboard, or the "Schedule as Public" control |
+| 4 | Un-gate the shop | Dashboard: Site Design → status tag → Live → Save |
+| 5 | Verify a guest browser can browse and reach checkout | Browser probe |
+
+> ⚠️ **Steps 2–4 are a single unit.** A public catalogue behind a password gate is fine; a public
+> catalogue behind an *open* shop is live. **Do not un-gate before the products are verified.**
+
+### C6 — Verification
+
+Every claim this release makes must be re-derivable by a command. **The build's own report is not
+evidence; the API's answer is.** Verification must be cache-busted (**T11**) and must read the **detail**
+endpoint, never the list (**T10**).
 
 ---
 
-## 4. Release plan
+## 4. Design decisions
 
-### v0.2.0 — "Sellable Storefront"
+### D1 — The Platform API builds; the dashboard stages and publishes
 
-Four gates. **Stop at any gate.** No gate may be skipped, because there is no bulk delete and no update
-endpoint: a wrong product is an archive-plus-recreate, and an archived product keeps its name.
+The build is a script: auditable, dry-runnable, idempotent, and already half-written
+(`scripts/publish-merch-to-fourthwall.ts`). The operations the API cannot perform — `PRIVATE`, collection
+state, and the shop's live status — are **manual, one-off, dashboard operations**, documented as such
+rather than automated.
 
-**Gate 0 — pre-flight, no writes.**
-1. **Publish the two HIDDEN Austin Skyline products** (OQ2 — decided). Dashboard-only. Without this,
-   the artwork the brief names is invisible to every customer.
-2. **Gate status: verified, decision open** (OQ2). The gate covers browsing, not `/checkout/` (§1.2).
-   Either un-gate the shop — dashboard: Site Design → status tag → Live → Save — or record explicitly
-   that v0.2.0 ships to a shop nobody can *find*. This is a launch-readiness decision, not a technical
-   one.
-3. **`gondeoleu`** (OQ4 — decided: it is an intentional original). Re-home it out of `all` and onto the
-   Originals surface (T19). Confirm nothing in the seeding script targets the slug `gondoleu` before it
-   runs.
-4. `git checkout -- tsconfig.json` before staging anything.
+*Rationale:* the repo's rule is that integration work uses *"documented HTTP and first-party CLIs, which
+are auditable and leave no standing capability behind"* (`docs/agentic/mcp/README.md`).
 
-*Not in scope:* any change to checkout, the webhook route, or `/import`.
+### D2 — Collections are created in the dashboard; products are attached by API
 
-**Gate 1 — pilot. One artwork, one template, one product.**
-Run the seeding script with `--only the-martian --template pro_4v5OfYhyRx62KW5b7Oj6Uw --apply` on a
-scratch name first, or accept that this creates a real product. Then verify **all four** of:
+**Revised 2026-10-02.** The API cannot set a collection's state and **does not document its default**.
+The dashboard **creates collections `Hidden` by default** and offers **"Schedule as Public"**.
+
+| Option | Verdict |
+| :--- | :--- |
+| **A — create collections via `POST /collections`** | Default state undocumented. Risks a **public** collection the moment it returns. |
+| **B — create collections in the dashboard, attach products via API** *(chosen)* | Lands `Hidden` by default; the product list stays scriptable via `PUT /collections/{id}/products`. |
+
+**B is chosen.** It removes the entire reliance on the password gate for collection safety, and it turns
+collection visibility into a real, dashboard-controlled launch gate rather than something we hope the API
+gets right.
+
+**Division of labour:**
+
+| Step | Surface |
+| :--- | :--- |
+| Create the 4 collections (they land `Hidden`) | **Dashboard** — 4 manual steps, once |
+| Attach the 40 products (full list, re-runnable) | **API** — `PUT /collections/{id}/products` |
+| Flip to `Public` at launch | **Dashboard** |
+
+> ⚠️ **This does not by itself make a staged collection invisible to the Next.js app** — see
+> [§2.7](#27--the-question-the-whole-design-rests-on). The dashboard default is a genuine improvement, not
+> a proof.
+
+### D3 — Products are created `HIDDEN`; `PRIVATE` is reserved for mistakes
+
+`HIDDEN` is the API default and the right default here: it survives a build interruption without exposing
+anything, and it is what the two existing `austin-skyline-2019` products already do. `PRIVATE` is held
+back for anything that must be unreachable even by direct URL — a mistyped product, a price under
+investigation.
+
+### D4 — Eligibility is per-region, not a blanket 1500px
+
+The repo's `FOURTHWALL_MIN_ACCEPTED_PX = 1500` is applied to `min(width, height)` for every artwork
+(`lib/fourthwall/merch.ts:67-100`). It rejects **6 of the 10 chosen artworks by under 7%**, and the KB
+already concedes it is a heuristic the API does not enforce.
+
+The authoritative requirement is **per template area**, published by the API itself:
+`GET /product-templates/{id}` → `customizableAreas[].dimensions` → `{ dpi, pixelsWidth, pixelsHeight,
+inchesWidth, inchesHeight }`. A mug area is recorded as **2700×1050 @ 300 DPI**.
+
+**Decision:** replace the blanket gate with a **per-region check** that reports the DPI actually achieved
+at the region's print size, and fails only when the artwork cannot fill the region at an acceptable DPI.
+`FOURTHWALL_MIN_ACCEPTED_PX` becomes a **warning threshold**, not a gate.
+
+*Rationale:* a blanket short-side rule cannot distinguish a mug region (2700×1050) from a backpack panel,
+so it is simultaneously too strict for some regions and too lax for others. The API publishes the real
+number; use it.
+
+> ⚠️ **This changes a tested rule.** `evaluateArtworkForMerch` has unit tests. Change their semantics
+> deliberately, in the same commit, with the old behaviour recorded — do not loosen a constant until the
+> tests pass.
+
+> **Region names are template-specific and not enumerated.** Read `customizableAreas[].regionId` per
+> template (**T08**). `placementStrategy` accepts `AUTO` (default) · `FILL_ALL` · `FULL_REGION` ·
+> `PLACEMENT_ID`; `AUTO` uses the product's automation defaults and **falls back to fill-all for mugs and
+> stickers**, which is why a hardcoded `"front"` works for a tee and is rejected for a mug.
+
+### D5 — Template ids are pinned in config and asserted at build time
+
+**T07**: the template list changed mid-session. Resolving a template by name can silently build the wrong
+product. The 6 ids go in a committed manifest, and the build **asserts each id still exists and still has
+the expected region** before creating anything.
+
+### D6 — No MCP server is enabled
+
+MCP adds write capability the Platform API lacks (§2.4) — but **not the capability this release needs**.
+Everything the build does, REST already does. Enabling it would grant a **standing, interactive,
+OAuth-authenticated capability to mutate the live shop**, in a repo whose MCP baseline is deliberately
+empty and whose rule 4 is *"Know the blast radius before enabling. A server that can write to Fourthwall
+can soft-delete products."*
+
+Revisit in Phase B, or via **OQ2**.
+
+### D7 — A committed manifest is the source of truth
+
+The 10 artworks, 4 collections, 6 template ids, price targets and region choices go into a committed
+JSON manifest. The build reads it; it is not encoded in CLI flags. This makes the catalogue **reviewable
+in a PR** before it exists, and makes the build reproducible rather than a sequence of remembered
+commands.
+
+### D8 — The build is paced and resumable
+
+`POST /products` is **5/min** (§2.3a). The build must pace itself, honour `OPEN_API_TOO_MANY_REQUESTS`
+with backoff, and be **safe to re-run**: name-based de-duplication already gives it this, and `--force`
+is the deliberate escape hatch. **A half-built catalogue must be a resumable state, not a corrupted one.**
+
+---
+
+## 5. Release plan
+
+**Stop at any gate.** No gate may be skipped: there is no bulk delete and no product-field update, so a
+wrong product is an archive-plus-recreate, and an archived product keeps its name.
+
+### Gate 0 — Decisions closed, and the design validated. No writes.
+
+- [ ] **`T00` — measure whether the Storefront API serves `HIDDEN` items** ([§2.7](#27--the-question-the-whole-design-rests-on)). **This gates everything.**
+- [ ] **OQ1** answered — the 1500px question, and whether PNG masters will be sourced.
+- [ ] **OQ4** answered — is `apparel` viable from JPEG sources?
+- [ ] **OQ3** answered — does `everyday-carry` get a taxonomy handle?
+- [ ] **OQ2** answered — API-only, or is the MCP in scope for the launch flip?
+- [ ] `git checkout -- tsconfig.json` before staging anything.
+
+### Gate 1 — The manifest is reviewed. No writes.
+
+- [ ] The manifest lists exactly 10 artworks, 4 collections, 6 pinned template ids.
+- [ ] **Every template id re-fetched**; `customizableAreas[].regionId` + `dimensions` recorded (**T02**).
+- [ ] The Comfort Colors tee id recovered, or the fallback chosen (**C3**).
+- [ ] Each price target converts to a positive `profitMargin` against the **live** base cost.
+- [ ] **No write has occurred.**
+
+### Gate 2 — The build runs, dry first
 
 ```bash
-# a. the product exists and is public
-curl -s "$PLAT/products?size=100" -H "Authorization: Basic $AUTH" \
-  | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).results.map(p=>p.slug+" "+p.state.type+" "+p.access.type).join("\n")))'
-
-# b. the Storefront API serves it (cache-busting param is required — a stale read looks like a failure)
-curl -s "$SF/collections/kitsch-cpg/products?currency=USD&storefront_token=$TOK&cb=$RANDOM" \
-  | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s).results||[];console.log(r.length,"products")})'
-
-# c. the rendered mockup is good — dashboard, eyes only. This is the step no script can do.
-# d. the price is right: the mug must read $22.00, not $0.22 and not $2200.
+# dry run — must create nothing, must print the full intended plan
+npx tsx scripts/publish-merch-to-fourthwall.ts --manifest <path>
+# then apply, one template at a time (paced: POST /products is 5/min)
+npx tsx scripts/publish-merch-to-fourthwall.ts --manifest <path> --template <id> --apply
 ```
 
-**If (c) or (d) fails, stop.** Fix the source artwork or the pricing rule, do not proceed to Gate 2.
+- [ ] Dry run reports the intended count and **creates nothing**.
+- [ ] Apply creates products with **`publishOnCreate: false`**.
+- [ ] **Zero `FAILED` lines.** A non-2xx must never be counted as success (**T28**).
+- [ ] Any 429 is paced and retried, not counted as a failure (**D8**).
 
-*Not in scope:* any front-end change.
+### Gate 3 — The catalogue is verified non-public
 
-**Gate 2 — the core catalogue. 10 mugs + 10 tees.**
-Create `kitsch-cpg` membership (PUT the full 10 ids) and create `apparel` with the 10 tees. This is the
-tier the live shop already half-proves.
-
-*Exit criteria:*
 ```bash
-# 20 products exist and are PUBLIC
-# both collections serve exactly 10 products through the Storefront API
-# zero FAILED lines in the seeding run
-# an archived duplicate count of 0 for names created in this run
+# every product reads HIDDEN, via the DETAIL endpoint (never the list — T10), cache-busted (T11)
+curl -s "$SF/v1/products/<slug>?cb=$RANDOM" -H "Authorization: $TOKEN"
 ```
 
-*Not in scope:* `desk-art`, `everyday-carry`, any front-end change, footwear.
+- [ ] All products exist and read **`HIDDEN`**.
+- [ ] All 4 collections resolve, are `Hidden`, and contain the intended product ids (**full list**, **T05**).
+- [ ] **The rendered mockup is good — dashboard, eyes only.** No script can do this step.
+- [ ] The price reads `$22.00` — not `$0.22`, not `$2200` (**T09**).
+- [ ] Variant count is correct — not one `11oz` variant (**T06**).
+- [ ] A guest browser gets `302 → /password` for every new product and collection URL.
 
-**Gate 3 — the extended catalogue, plus the mug rebuild. 20 more products.**
-`desk-art` (10) and `everyday-carry` (10), then **T21** — rebuild the four mugs with explicit `sizes`
-(11oz/15oz/20oz) and re-point `kitsch-cpg` with the PUT in the same run (OQ7 — decided). Then, and only
-then, the front-end refactor lands.
+### Gate 4 — Local gates green
 
-*Exit criteria:*
 ```bash
+git checkout -- tsconfig.json
 ./node_modules/.bin/tsc --noEmit
 ./node_modules/.bin/vitest run
-# baseline before this release: 97 passed (6 files). Both gates must be green, and the count must
-# only go UP — a drop means a guard was deleted rather than satisfied.
-# every taxonomy handle resolves to a non-empty Fourthwall collection:
-for h in kitsch-cpg apparel desk-art everyday-carry; do
-  echo -n "$h "
-  curl -s "$SF/collections/$h/products?currency=USD&storefront_token=$TOK&cb=$RANDOM" \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log((JSON.parse(s).results||[]).length))'
-done
-# 10 10 10 10 — any other number is a failure
 ```
 
-*Not in scope:* the v0.3.0 families, the studio site, `roryskagenart.com`.
+- [ ] Both green. **Baseline 97 passed / 6 files; the count may only go up.**
+- [ ] Any changed eligibility rule has deliberately updated tests (**D4**).
 
-### The acceptance test for the whole programme
+### The programme acceptance test
 
-> **Every product card the storefront renders resolves to a real Fourthwall product that can be added
-> to a cart and checked out.**
-
-Concretely: for each product the site renders, `GET /v1/collections/<handle>/products` returns it, and
-`addItem` succeeds against Fourthwall rather than falling through to the in-process `Map`
-(`lib/fourthwall/index.ts:481-484`).
-
-**If it does not hold, the release failed and the correct response is to revert the front-end change —
-not to keep the new navigation and the old fake catalogue.** Shipping a smaller honest catalogue beats
-shipping a larger dishonest one.
+> **The catalogue exists in Fourthwall, is complete, and is unreachable by a guest.**
+> 10 artworks × 4 product types = up to 40 products, all `HIDDEN`, in 4 `Hidden` collections, with the
+> shop still password-protected. **Nothing is published.**
 
 ---
 
-## 5. Task inventory
+## 6. Task inventory
 
-| # | Task | Capability | Release | Blocked by |
-| :--- | :--- | :--- | :--- | :--- |
-| T1 | `lib/fourthwall/merch-catalog.ts`: 10-slug allowlist, pinned template ids, target prices, collection map | C1 | v0.2.0 | OQ1, OQ6, OQ7 |
-| T2 | Unit tests for the catalogue: every slug exists in `rory-artworks-data.json` and is `Available`; every template id is in the pinned table; every target clears its base cost | C1 | v0.2.0 | T1 |
-| T3 | Extend `scripts/publish-merch-to-fourthwall.ts` to consume the catalogue (matrix, not one template), with `--only`/`--collection`/`--apply` and a printed created/skipped/failed count | C2 | v0.2.0 | T1 |
-| T4 | Add collection reconciliation: create missing collections, then `PUT /collections/{id}/products` with the full `offerIds` list | C2 | v0.2.0 | T3 |
-| T5 | Gate 1 pilot + verification | C2 | v0.2.0 | T4, OQ2, OQ4, OQ5 |
-| T6 | Gate 2: 10 mugs + 10 tees | C2 | v0.2.0 | T5 |
-| T7 | Gate 3: `desk-art` + `everyday-carry` | C2 | v0.2.0 | T6 |
-| T8 | Rewrite `PRODUCT_COLLECTIONS` to the 4 sellable handles; delete unfulfillable `productTypes`/`sampleProducts` copy | C3, C5 | v0.2.0 | T7 |
-| T9 | Rewrite the homepage hero + chips; remove the "15 originals / $4k–$28k / 137 works" claims; reduce the B2B banner to one inquiry CTA | C5 | v0.2.0 | T8 |
-| T10 | Re-point `three-items.tsx` + `carousel.tsx` off `fine-art-originals` | C4 | v0.2.0 | T8 |
-| T11 | Remove the local-catalogue fallback in `getCollectionProducts` / `getProduct`; thread a `source` flag through `reshapeProduct` | C4 | v0.2.0 | T8 |
-| T12 | Render an "Inquire" state instead of a buy box when `source !== 'fourthwall'` | C4 | v0.2.0 | T11 |
-| T13 | Fix `NEXT_PUBLIC_FW_COLLECTION` (`fine-art-originals` → `kitsch-cpg`) in Vercel **and** `.env.local`; note that `NEXT_PUBLIC_*` is inlined at build, so it needs a redeploy | C4 | v0.2.0 | T10 |
-| T14 | Update `TAXONOMY_HANDLES` in `collections.test.ts`; add a guard that no `components/**` href points at a handle with no Fourthwall collection | C6 | v0.2.0 | T8 |
-| T15 | Relabel the `v1.x` roadmap in `brand-config.ts` + `docs-content.ts` (OQ1) | — | v0.2.0 | OQ1 |
-| T16 | Delete the `the-martian-white-glossy-mug` archived duplicate if the dashboard permits | — | v0.2.0 | OQ3 |
-| T17 | **Pin the 4 collection display names vs slugs before any create call** (§2.3). `kitsch-cpg` keeps its slug and gets a shopper-facing taxonomy title; the 3 new collections get names that are both shopper-facing and slug-clean | C8 | v0.2.0 | T1 |
-| T18 | Rewrite all shopper-facing copy: materials, care, sizing, shipping, returns; delete every product type with no template | C8, C5 | v0.2.0 | T8 |
-| T19 | Re-home `gondeoleu` out of `all` into the Originals surface — dashboard for the listing, `PUT /collections/{all}/products` to drop it from `all` | C8, C4 | v0.2.0 | OQ4 |
-| T20 | Product-page conventions: variant selector driven by **real** Fourthwall variants, breadcrumbs, related products from the same collection | C8, C4 | v0.2.0 | T12 |
-| T21 | **Rebuild the 4 mugs with explicit `sizes`** and re-point `kitsch-cpg` with the PUT (OQ7) | C2 | v0.2.0 | T7 |
-
-**Genuinely parallel:** T1, T2, T15 and T17 need no API access and can be written before Gate 1. T18 and
-T20 are pure front-end work that can be drafted against the *known* catalogue shape. T14's guard can be
-written against the new handle list before the products exist — it will simply fail until Gate 3 passes,
-which is the point.
+| # | Task | Gate | Notes |
+| :-- | :--- | :--- | :--- |
+| **T00** | **Measure whether the Storefront API returns `HIDDEN` products/collections** | **0** | **§2.7 — read-only probe, gates the design** |
+| **T01** | Write the catalogue manifest (10 artworks, 4 collections, 6 template ids, prices) | 1 | D7 |
+| **T02** | Re-fetch all 6 template ids; record `regionId` + `dimensions`; **recover the Comfort Colors tee id** | 1 | D5, T08, C3 |
+| **T03** | Replace the blanket gate with a per-region DPI check | 1 | **D4** — changes tested code |
+| **T04** | Add `PUT`/`DELETE` support to the script's `api()` helper | 2 | It is `GET \| POST` only today |
+| **T05** | Make the build read the manifest instead of CLI flags | 2 | D7 |
+| **T06** | Make the build iterate all 6 templates in one run | 2 | It does one template per invocation |
+| **T07** | Add 429 pacing + backoff, and prove resumability | 2 | **D8**, §2.3a |
+| **T08** | Add collection create + `PUT /collections/{id}/products` to the build | 2 | Full-list semantics — T05 |
+| **T09** | Add a `--verify` mode: assert every product `HIDDEN`, every collection `Hidden`, variant counts right | 3 | Cache-busted, detail endpoint |
+| **T10** | Pass `sizes` explicitly on every apparel and mug product | 2 | **T06** is already live in production |
+| **T11** | Create the 4 collections in the dashboard (they land `Hidden`) | 2 | **D2** — manual, 4 steps |
+| **T12** | Add the `everyday-carry` taxonomy handle — **or** drop the collection | 0 | OQ3 |
+| **T13** | Build the launch-gate runbook (5 steps, §C5) | 3 | Specified, not executed |
+| **T14** | Record the 4 new traps + correct T03/T04 in `docs/agentic/traps/register.md` | 4 | Appendix B |
+| **T15** | Correct the stale claims in `docs/agentic/stack/fourthwall.md` (incl. the unverified HIDDEN claim) | 4 | Appendix B |
+| **T16** | Add the official MCP server + the agentic feature timeline to `docs/agentic/mcp/README.md` | 4 | Appendix B |
+| **T17** | Re-register this document in `docs/releases/plans/README.md` | 4 | Already done in the re-scope commit |
+| **T18** | **Resolve `beat-bop`** — substitute `jobar` (OQ8) or obtain a replacement image | **0** | **§1.5 — the build hard-fails on a 404** |
+| **T19** | Add an **image-URL reachability check** to `--verify` (and to the manifest builder) | 3 | Would have caught §1.5 before the build did |
+| **T20** | Point the build at the **local q98 masters** where one exists; CDN URL as fallback | 2 | **§C1a** — a quality win, not a resolution one |
 
 ---
 
-## 6. Sequencing and critical path
+## 7. Sequencing and critical path
 
 ```
-OQ1 OQ2 OQ4 OQ5 OQ6 OQ7  (owner decisions — everything waits on these)
-        │
-     Gate 0
-        │
-   T1 ─ T2 ─ T3 ─ T4 ─ T5 ══ STOP if the mockup or the price is wrong
-                          │
-                        T6 (20 products)
-                          │
-                        T7 (40 products)
-                          │
-             T8 ─ T9 ─ T10 ─ T11 ─ T12 ─ T13 ─ T14
-                          │
-             T15, T16  (independent)
+T00 (does the Storefront API serve HIDDEN?) ──┐
+T18 (beat-bop is 404 — substitute) ───────────┤
+OQ1 (1500px / PNG masters) ───────────────────┼─→ T01 manifest ─→ T02 templates ─→ T03 gate ─→ Gate 1
+OQ4 (apparel viability) ──────────────────────┤                                                │
+OQ3 (everyday-carry) ─────────────────────────┘                                                ▼
+                        T04 PUT helper ─→ T05 manifest ─→ T06 loop ─→ T07 pacing ─→ T08 collections
+                                                                                               │
+                                                                                               ▼
+                                                                            Gate 2 dry ─→ Gate 2 apply
+                                                                                               │
+                                                                                               ▼
+                                                                            T09 verify ─→ Gate 3 ─→ Gate 4
 ```
 
-**Critical path: OQ decisions → Gate 0 → T1→T4 → T5 → T6 → T7 → T8 → T11 → T12 → T14.**
+**Critical path:** **T00** → OQ1 → T01 → T03 → Gate 1 → T05 → Gate 2.
 
-The front end must land **after** the catalogue, never before: T8–T14 remove the fallback that makes
-the site work at all today, and doing that first would leave every category empty.
-
----
-
-## 7. Risk register
-
-| ID | Risk | Impact | Mitigation | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| R1 | **The source artwork is the bottleneck.** 38 of 42 `Available` works are under 1500px; the studio's most famous mural is 576×376. | High | Merchandise the 10 best and say so in the copy. The real fix is 300 DPI PNG masters from Rory — **an owner action, not a code change** | Open, out of scope |
-| R2 | **The shop is `PASSWORD_PROTECTED` — browsing is gated, `/checkout/` is not** (§1.2). No API endpoint can change it | **High** (downgraded from Critical) | Dashboard: Site Design → status tag → Live → Save. Until then v0.2.0 ships a shop nobody can *find* — but the Next.js app is ungated and can complete a purchase, so this is launch-readiness, not a hard blocker | Open, owner-only |
-| R3 | **No update endpoint and no bulk delete.** A wrong price or a wrong region is archive-plus-recreate, and the archive is soft — it leaves a duplicate behind | High | Gate 1 pilot; pin everything in config; never probe an unknown method against a live resource | Accepted |
-| R4 | **The template set is mutable and changed mid-session** (§1.4) | Medium | Pin template ids; assert each still exists before creating; fail loudly, never fall back to a name match | Open |
-| R5 | `austin-2019` is 1467px — under the local gate — and both of its live products are `HIDDEN` | Medium | Accept 1467 (the live tee proves it prints); publish the two products at Gate 0 | Open, OQ2 |
-| R6 | A single `profitMargin` cannot hit one price across sizes | Low | Choose the size the margin targets — OQ6 | Open |
-| R7 | The Storefront API is **CDN-cached per exact URL**. A stale read looks exactly like a failed write | Medium | Always cache-bust with a random param; wait before concluding | Known trap |
-| R8 | `lib/taxonomy.ts` is read by the nav, the homepage, the category page and `collections.test.ts`. A partial edit leaves the nav and the tests disagreeing | Medium | T8 and T14 land together; run `tsc` **and** `vitest` — vitest alone passes on code `tsc` rejects | Known trap |
-| R9 | ⚠️ **The plausible distractor.** This refactor is visible and satisfying; the unglamorous blockers are R2 (the password gate), OQ4 (a possibly-100×-wrong live price) and the two hidden Austin Skyline products. | High | All four are Gate 0 items with named owners. The refactor must not become the reason they slip | Open |
-| R10 | PR #2 (unmerged) also creates `docs/releases/plans/` | Low | Merge one first; rebase the other. No conflict is possible in the file itself | Open |
+> **`T00` blocks everything.** If the Storefront API does serve hidden items, then staging in Fourthwall
+> does **not** keep the catalogue off the Next.js app, and this release's core premise needs rethinking
+> before a single product is created. **Measure it first — it costs one read-only request.**
+>
+> **OQ1 blocks the artwork set.** If the answer is *"source 300 DPI PNG masters from Rory"*, the 10 may
+> change and T01 is void. **Its "maybe we already have bigger files" branch is now closed (§C1a).**
+>
+> **`T18` blocks the build outright** — not a risk to weigh, a certain failure. `beat-bop`'s URL is 404 and
+> `publish-merch-to-fourthwall.ts:405` fetches exactly that URL. Resolve it before Gate 1.
 
 ---
 
-## 8. Do not do yet
+## 8. Risk register
 
-Carried forward, still live:
-
-- **Do not deploy, and do not push to `main`.** Push-to-deploy is active, so a push to `main` is a
-  production deploy. Each push needs its own explicit approval.
-- **Do not publish to `roryskagenart.com`.** The artist's studio site, separate repo, out of scope.
-- **Do not switch this project's git remote.** `origin` stays `roryskagenart/shop.roryskagen.com` —
-  note `.com`, not `.art.com`.
-- **Do not recreate the GitHub Actions deploy bypass.** Git integration works; `deploy.yml` was deleted
-  deliberately.
-- **Do not probe an unknown HTTP method against a live resource.** Learning that `DELETE` soft-deletes
-  cost a real product; that is where the archived duplicate in §1.3 came from.
-
-New for this release:
-
-- **Do not add a second unguarded public write endpoint.** If the seeding script gains an HTTP trigger,
-  it inherits the `/import` gate question — do not ship it beside Basic auth without deciding.
-- **Do not put Fourthwall credentials in a client component.** The seeding script is a local CLI; keep
-  it that way.
-- **Do not extend the design pipeline to originals** (D3). It has no price field.
+| # | Risk | Likelihood | Impact | Mitigation |
+| :-- | :--- | :--- | :--- | :--- |
+| **R0** | **The Storefront API serves `HIDDEN` items, so the "staged" catalogue is visible on the ungated Next.js app** | **Unknown** | **Critical** | **T00 — measure before building anything.** Fallback: `PRIVATE` via the dashboard, or build products last. |
+| **R1** | A create payload is wrong and cannot be fixed — no product-field update path (**T03**) | **High** | Medium | Get it right first time; `--force` rebuild; archiving frees the slug. |
+| **R2** | The build hits the **5/min** create limit and half-completes | **High** | Medium | **D8** — pace, back off on 429, keep the build resumable. |
+| **R3** | A rebuild leaves archived duplicates cluttering the dashboard | High | Low | Expected. Archived items do not count toward plan limits. |
+| **R4** | The shop gate is lifted while the catalogue is incomplete | Low | **Critical** | §C5 treats the flips and the un-gate as one unit. State it in the runbook. |
+| **R5** | `apparel` cannot be built from JPEG sources | Medium | Medium | OQ4. Precedent: the live tee is DTG+JPEG and rendered. Fall back to sublimation. |
+| **R6** | A product is created with only one variant (**T06**, already live) | **High** | Low | T10 — pass `sizes`; assert variant count in `--verify`. |
+| **R7** | The 6 sub-1500px artworks print poorly | Medium | Medium | D4; verify each mockup by eye at Gate 3. |
+| **R8** | A template id resolves to a different product (**T07**) | Medium | Medium | D5 — pin and assert. |
+| **R9** | A stale read is mistaken for a failed write (**T11**) | **High** | Low | Cache-bust every verification. |
+| **R10** | ~40 SKUs is too many for a launch — Fourthwall's own guidance says *"one design across 4–6 products"* | Medium | Medium | OQ6. The staged build makes a later trim cheap. |
+| **R11** | **T01 stays live** — the storefront still fabricates purchasable originals | — | Medium | Out of scope by decision (§9). **Must** be fixed before un-gating. |
+| **R12** | The Comfort Colors tee template never reappears | Medium | Low | Fall back to AS Colour Unisex Premium Tee (**C3**). |
+| **R13** | **An artwork's `image.url` is dead, so the build throws** | **Certain** for `beat-bop` | **High** | **T18** — substitute `jobar`, or source a replacement. Nine records affected; **T19** adds a reachability check. |
+| **R14** | Products inherit the **q85 CDN re-encode** rather than the q98 master | **Certain** | Low | **T20** — switch the upload source. Print quality only; no effect on the pixel gate. |
 
 ---
 
-## 9. Open questions for the owner
+## 9. Do not do yet
 
-Each carries a recommendation. **Status as at 2026-10-01:** OQ1, OQ2, OQ4 and OQ7 are **answered** (see
-§0a) — the rationale below is kept because it is what the decision was made against. **OQ3, OQ5, OQ6 and
-OQ8 remain open**, and only OQ6 still blocks work (T1's mug margin). OQ1–OQ3 blocked Gate 0; OQ4–OQ7
-blocked T1.
+| Deferred | Why | Trigger to revisit |
+| :--- | :--- | :--- |
+| **Publishing anything** | This release constructs only (R1). | Phase B PRD. |
+| **Un-gating the shop** | Same. | Phase B. |
+| **Removing the fabricated-catalogue fallback (T01)** | Out of scope. Safe only while gated. | Phase B — **must** land before un-gating. |
+| **The UX re-imagining** | Cannot be verified against a catalogue that does not exist yet. | Phase B. |
+| **Enabling the MCP server (D6)** | Standing write capability against a live shop. | OQ2, or Phase B. |
+| **Rebuilding the 4 live mugs for 15oz/20oz** | Archiving four live products is a publish-phase concern. | Phase B. |
+| **Re-homing `gondeoleu` out of `all`** | A publish-phase concern; `all` is not reachable while gated. | Phase B. |
+| **Fixing the `gondeoleu` slug typo** | Archive + recreate via API; trivial via the MCP. Cosmetic. | Phase B, or never. |
+| **The 15 originals** | Structurally impossible via API (**T12**). | Never, via API. |
+| **Wall art** | No template exists (**T13**). | If a print vendor is added. |
+| **Extended families** — tumbler, surf cap, hoodie, slides, shoes, drawstring bag | Out of the 4 collections. | A later release. |
+| **Eli / ChatGPT-app product creation** | Least auditable path; not needed for a scripted build. | Phase B, or OQ5. |
 
-**OQ1 — Which version number does this release take?**
-The repo holds **two numbering spaces** and they disagree. The tag line has exactly one member,
-`v0.1.0`. `lib/brand-config.ts:66-101` declares `v1.1.0` as *"Step 1 (Current Release - Low Risk /
-Active)"* and `v1.2.0`–`v1.5.0` as planned; `lib/docs-content.ts:1178-1190` repeats v1.2.0–v1.5.0. No
-`v1.1.0` tag exists.
-*Recommendation:* **name this release `v0.2.0`** — it continues the only tag line, and a pushed tag
-cannot be renumbered. Then relabel the `BRAND_CONFIG.roadmap` entries (T15) to a visibly different
-scheme, because a document that claims a current release that does not exist is the same contradiction
-in a third place. If instead you want `v1.1.0`, the roadmap must be renumbered **in the same PR**.
+---
 
-**OQ2 — Do the two HIDDEN Austin Skyline products get published, and does the shop get un-gated?**
-`austin-skyline-2019-white-glossy-mug` and `…-comfort-colors-…-t-shirt` are `AVAILABLE` but `HIDDEN`,
-so the Storefront API does not serve them. The brief names that artwork explicitly.
-*Recommendation:* publish both at Gate 0, and un-gate the shop before Gate 1 — otherwise the whole
-release is unverifiable end to end. Both are dashboard-only, so they need you or Rory.
+## 10. Open questions
 
-**OQ3 — Keep Basic auth on `/import` for one more release?**
-Raised by PR #2; it becomes relevant only if the seeding script gets an HTTP trigger.
-*Recommendation:* yes — keep it, per PR #2's OQ3.
+Each carries a recommendation. **A question without a recommendation is a stall.**
 
-**OQ4 — Is `gondeoleu`'s $4,500.00 price intentional?**
-The live product is `gondeoleu` (note the extra `e`; the catalogue slug is `gondoleu`), `STANDARD`,
-`AVAILABLE`, `PUBLIC`, `LIMITED` stock 1, 8 lb, 10×12×2 in, priced **$4,500.00**. The catalogue lists
-`gondoleu` at `basePriceUSD: 55`. Either it is a deliberate original listing or a price entered in
-cents where dollars were meant — a 100× error on a public product.
-*Recommendation:* confirm before T1. If it is an original listing, it should not sit in `all` beside
-$22 mugs; if it is an error, fix it in the dashboard first, because it is the only non-merch product a
-customer can currently see.
+**OQ1 — Do we accept the 6 sub-1500px artworks, or source proper masters?**
+Six of the ten sit at 1400–1476px on the short side — 93–98% of the repo's heuristic. The KB concedes the
+gate is *"a quality heuristic, not a hard constraint"* and that a real product was built from a 2100×1467
+source with good mockups.
+**The "maybe we already have bigger masters" branch is now closed by measurement (§C1a):** all 22 matched
+local files are the *same pixel dimensions* as the catalogue. Nothing on hand is bigger.
+*Recommendation:* **accept them for this build and replace the gate with a per-region DPI check (D4).**
+Then, **in parallel and off the critical path, ask Rory for 300 DPI PNG masters** — that is the real fix,
+it is the only thing that helps `apparel` (OQ4), and it costs nothing to request now. Separately, **use the
+local q98 masters as the upload source** for the 9 artworks that have one (§C1a) — that is a quality win
+available today, independent of resolution.
 
-**OQ5 — Fix the `gondeoleu` slug typo?**
-The slug derives from the name and there is no update endpoint, so fixing it means archive + recreate.
-*Recommendation:* fold it into OQ4 — if the product is rebuilt anyway, the slug costs nothing.
+**OQ2 — Platform API only, or is the MCP in scope?**
+MCP adds product-detail, slug and variant-price editing that REST lacks (§2.4) — none of which this
+release needs.
+*Recommendation:* **API only for the build (D6).** Reconsider for the *launch flip* in Phase B, where
+`update-shop-site-status` and `update-collection-state` would replace manual dashboard steps. Do not
+enable it now.
+
+**OQ3 — Does `everyday-carry` get a taxonomy handle, or is it dropped?**
+It has no `lib/taxonomy.ts` entry, which puts one code file in scope.
+*Recommendation:* **add the handle.** One entry in an array is trivial, and dropping the collection leaves
+the 10 bag products with nowhere to live. If the release must stay Fourthwall-only, drop `everyday-carry`
+and redistribute those 10 products — but say so explicitly.
+
+**OQ4 — Is `apparel` viable, given every source is JPEG?**
+`merch.ts:33-38` records that DTG/DTFx/embroidery require PNG transparency, and all 137 images are JPEG.
+**But the precedent cuts the other way:** the live `austin-skyline-2019-comfort-colors-…-t-shirt` is a DTG
+product built from a JPEG source, and it rendered. So the rule is a caution, not an enforced gate.
+*Recommendation:* **build one tee, verify the mockup by eye, then decide.** Prefer white or light garments,
+where an opaque print is not a defect. Do not build ten tees to discover this.
+
+**OQ5 — Who flips the catalogue public — a script, Eli Actions, or the dashboard?**
+A script is auditable and reviewable in a PR. Eli Actions is purpose-built for bulk visibility changes
+but is **Pro-only and leaves no diff** — and the Pro claim is itself contradicted in Fourthwall's own
+docs (§2.5).
+*Recommendation:* **a script for products** (`PUT /products/{id}/state`), because this repo's standard is
+that every state change is re-derivable by a command; **the dashboard for collections**, because the API
+cannot do it (D2). Use Eli Actions only as a cross-check.
 
 **OQ6 — Which size does the mug margin target?**
-One `profitMargin` per product, but three base costs. At a margin set from the 11oz target, the ladder
-is $22.00 / $24.55 / $26.55.
-*Recommendation:* target the **15oz** ($24.55 on an $8.50 base → $22.00 / $24.55 / $26.55 becomes
-$20.05 / $22.00 / $24.00-ish); pick whichever keeps $22.00 as the visible entry price. Decide once —
-rebuilding mugs is the expensive operation.
+One `profitMargin` per product, but three base costs. At a margin set from the 11oz target the ladder is
+**$22.00 / $24.55 / $26.55**.
+*Recommendation:* **keep $22.00 as the visible entry price** and accept the ladder. Rebuilding mugs is the
+expensive operation (**T03**); decide once.
 
-**OQ7 — Rebuild the four live mugs to get 15oz and 20oz?**
-They carry a single 11oz variant because `sizes` was omitted at create. Archiving frees the slug, so the
-rebuild is clean, but it briefly removes four live products and leaves four archived duplicates.
-*Recommendation:* **yes, at Gate 3, not Gate 1** — do it once, after the matrix is proven, and re-point
-`kitsch-cpg` with the PUT in the same run.
+**OQ7 — Does the version number stay `v0.2.0`?**
+`lib/brand-config.ts:66-101` claims **`v1.1.0` is the current release**, while the tag line has only
+`v0.1.0` (**T24**).
+*Recommendation:* **keep `v0.2.0`** — it continues the only tag line, and a pushed tag cannot be
+renumbered. Relabel the `BRAND_CONFIG.roadmap` entries in the same PR.
 
-**OQ8 — Should the 3 originals among the 10 be merchandised as "also available as the original"?**
-`empopatya` ($16,000), `gianondor` ($18,500) and `the-persistence-of-cats` ($14,500) are in
-`originals-data.json`.
-*Recommendation:* yes — a text link from the merch product to an inquiry, not a cart button. It is the
-one genuinely differentiated thing this catalogue has, and D4 gives it a home.
+**OQ8 — `beat-bop`'s image is dead. Substitute artwork #10, or source a replacement?**
+`beat-bop` is `Available`, is chosen artwork #10, and its `image.url` returns **404** (§1.5). The build
+fetches that URL at line 405, so it will hard-fail rather than produce a bad product. Nine records share
+the defect, but only `beat-bop` is in the ten.
+
+The substitute must satisfy three constraints at once — URL resolves, short side ≥1400px, and series
+balance. **Measurement shows the first two and the third are mutually exclusive.** Exactly **4** records
+clear the resolution floor, and **all four are Monsters & Kaiju**:
+
+| Candidate | Dimensions | Short side | Local q98 master? |
+| :--- | :--- | ---: | :---: |
+| `jobar` | 2100×1454 | **1454** | ✓ `jobar.jpg` |
+| `osore` | 2100×1445 | 1445 | ✓ `osore.jpg` |
+| `gaurdon` | 2100×1444 | 1444 | ✓ `gaurdon.jpg` |
+| `kondowari` | 2100×1444 | 1444 | ✓ `kondowari.jpg` |
+
+The best Pop Surrealism alternative, `the-greeting-card-machine`, is **1050×791** — it would *lower* the
+floor rather than raise it. There is no Pop Surrealism record both `Available` and ≥1400px.
+
+*Recommendation:* **substitute `jobar`** — largest of the four (1454px, +54px over `beat-bop`), a resolving
+URL, and a local q98 master. **Accept that the series split becomes 1 Austin / 2 Pop / 5 Kaiju / 2 Atomic**
+and update §C1's stated "4/3/2/1" to match; do not pretend the split survives. Only if Rory supplies a
+replacement image should `beat-bop` stay. Fixing the other 8 broken records is a separate defect ticket,
+not this PRD.
 
 ---
 
-## 10. Release mechanics
+## 11. Release mechanics
 
-- **Branch:** `feat/merch-catalog-v0.2.0` for the code; `docs/…` for this document. Open the PR as a
-  **draft** while OQ1–OQ3 are unanswered — that is the honest state and it prevents an accidental merge.
-- **Do not** edit `CHANGELOG.md` (none exists), the deployment log, or a canonical context file for a
-  plan. Those change when the work executes.
-- **Gates:** CI is `.github/workflows/ci.yml` → `npm ci`, `npm run lint` (= `tsc --noEmit`), `npm test`.
-  Run **both** `tsc` and `vitest` locally: `vitest.config.ts` sets `globals: true` at runtime only, so a
-  test that omits its imports passes vitest and fails `tsc`. `tsconfig.json` sets
-  `noUncheckedIndexedAccess: true`.
-- **Before staging:** `git checkout -- tsconfig.json` (Next rewrites it on every dev/build run).
-- **Before any local `vercel deploy`:** `vercel deploy --dry --json` and check the file list — the CLI
-  does not read `.gitignore`.
-- **This document is untracked until committed.** A brand-new plan file is the most fragile artifact in
-  the session; commit it (not push) before doing anything else, or say so and it stays local.
+- **Branch:** `feat/merch-catalog-staged` for the build changes; `docs/merch-catalog-staged` if the
+  document moves alone. Open the PR as a **draft** while OQ1–OQ8 are unanswered.
+- **Register this plan** in [`README.md`](README.md) in the same PR — a plan that is not registered is a
+  plan nobody will find.
+- **Do not** edit `CHANGELOG.md`, a deployment log, or a canonical context file from a plan.
+- **Gates:** `./node_modules/.bin/tsc --noEmit` and `./node_modules/.bin/vitest run`. **Both, always**
+  (**T15**). Do not add `prettier:check` (**T31**).
+- **Before staging:** `git checkout -- tsconfig.json`.
+- **Never stage:** `.env*`, `.workbuddy-ai/`, `tsconfig.tsbuildinfo`.
+- **This repo is public.** Redact before committing anything derived from a shell session
+  (`protocols/documentation.md` §5).
+- **No deploy. No push without explicit per-release approval.** `main` is git-connected to Vercel.
 
 ---
 
@@ -670,42 +883,70 @@ one genuinely differentiated thing this catalogue has, and D4 gives it a home.
 
 | Claim | Evidence |
 | :--- | :--- |
-| Local tree = remote `main` at `87cf568…` | `git rev-parse HEAD`; `gh api repos/roryskagenart/shop.roryskagen.com/commits/main` |
-| Shop is `PASSWORD_PROTECTED` | `GET /open-api/v1.0/shops/current` → `"status":"PASSWORD_PROTECTED"` |
-| 3 collections, slugs `kitsch-cpg`/`featured`/`all` | `GET /open-api/v1.0/collections?size=100` |
-| 8 products, 5 customer-visible | `GET /open-api/v1.0/products?size=100` |
-| `unitPrice.value` is dollars | `gondeoleu` `{"value":4500}` served as `$4500 USD` by the Storefront API; mug `unitCost` `5.95` vs $5.95 base |
-| 25 templates, ids and base costs | `GET /open-api/v1.0/product-templates`; the table in §1.4 |
-| `total: 601` is not this shop's count | Same call returns 25 results; `size`/`page` do not change the result |
-| The template set changed mid-session | First call: Comfort Colors tee present, Drawstring Bag absent. Later call: the reverse |
-| No wall-art template exists | The 25 templates in §1.4 contain no poster/canvas/metal entry |
-| Mug region is `default`, 2700×1050 @300 DPI, placements front/back | `GET /open-api/v1.0/product-templates/pro_4v5OfYhyRx62KW5b7Oj6Uw` |
-| Collections can be assigned products by API | `PUT /open-api/v1.0/collections/{collectionId}/products`, body `{offerIds}` — docs: *"Sets the full list of product IDs in the collection"*, scope `offer_write` |
-| `/v1/products` (list) 404s on the Storefront host; `/v1/collections/{slug}/products` works | Direct probe; the 404 body is `No static resource api/public/v1.0/products` |
-| **`/v1/products/{handle}` (detail) works** — 200 with the token, 401 without, 404 `OFFER_SLUG_NOT_FOUND_ERROR` for an unknown slug | Direct probe against `the-martian-white-glossy-mug`, `greetings-from-austin`, `nope-not-real` |
-| **The password gate covers browsing but not checkout** | `curl` with a browser UA: `/`, `/products/…`, `/collections/…`, `/cart` → 302 `/password`; `/checkout` → 301 → `/checkout/` → 200, `<title>Checkout – Fourthwall</title>` |
-| The Storefront cart API is live and token-authenticated | `POST /v1/carts` + token → `400 "JSON parse error. Value failed for JSON property \`items\`"`; without token → 401 |
-| `/password` canonical host is `shop.roryskagenart.com` | `<link rel="canonical">` on the `/password` page |
-| The taxonomy title wins over a colliding Fourthwall collection name | `lib/fourthwall/__tests__/collections.test.ts` ("prefers the taxonomy title over a colliding Fourthwall collection") — the basis for D4/§2.3 naming |
-| `kitsch-cpg` serves 4 mugs at $22; `all` serves those plus Gondeoleu at $4500 | `GET /v1/collections/{kitsch-cpg,all}/products?currency=USD&storefront_token=…` |
-| Homepage hard-codes "15 originals / $4k–$28k / 137 Works" | `app/[currency]/page.tsx:47,57,66,101` |
-| Homepage grid sources a non-existent handle | `components/grid/three-items.tsx:50`; `.env.local` `NEXT_PUBLIC_FW_COLLECTION="fine-art-originals"` |
-| Local-catalogue fallback fabricates purchasable products | `lib/fourthwall/index.ts:385-397` and `:451-465` |
-| The cart falls back to an in-process `Map` | `lib/fourthwall/index.ts:481-484`; `components/cart/actions.ts:22-36` |
-| Only 4 of 42 `Available` artworks clear 1500px | Computed over `lib/fourthwall/rory-artworks-data.json` |
-| "Greetings from Austin" is `Sold` at 576×376 | Same file, `slug: greetings-from-austin` |
-| Only `austin-2019` of the Austin-iconic set exceeds 800px | Same file, series `Austin Iconic & Texas Pop` |
-| Two live products are `HIDDEN` | `GET /open-api/v1.0/products?size=100` → `access.type: "HIDDEN"` |
-| `collections.test.ts` asserts all 7 taxonomy handles | `lib/fourthwall/__tests__/collections.test.ts:20-28` |
-| `BRAND_CONFIG.roadmap` claims `v1.1.0` is the current release | `lib/brand-config.ts:66-101`; `lib/docs-content.ts:1178-1190` |
-| Plan-document idiom | `docs/releases/plans/pr-gh-oauth_DRAFT.md` (PR #2, branch `docs/gh-oauth-plan`) |
+| `HEAD` = `0ef582e`, tree clean | `git rev-parse HEAD`; `git status --short` |
+| Only `v0.1.0` is tagged | `git tag -l` |
+| `publishOnCreate` defaults to `false` | `open-api.json` → `create-product` requestBody: *"Defaults to false (product stays hidden)."* |
+| `PUT /products/{id}/state` accepts `PUBLIC`/`HIDDEN` only | `open-api.json` → `UpdateProductStateV1Request.description` |
+| `access` has four states | `open-api.json` → `OfferAbstractV1.OfferAccessV1.discriminator.mapping` |
+| `state` has two states | `open-api.json` → `OfferAbstractV1.OfferStateV1.discriminator.mapping` |
+| `PUT /collections/{id}` exists; takes `name`/`description`/`offerIds` | `open-api.json` → `update-collection` requestBody |
+| `POST /collections` has no state field; **default state undocumented** | `open-api.json` → `create-collection` requestBody |
+| Collection state model is `PUBLIC/HIDDEN/PRIVATE/ARCHIVED` | `open-api.json` → `CollectionStateV1.discriminator.mapping` |
+| **The dashboard creates collections `Hidden` by default, with "Schedule as Public"** | `help.fourthwall.com/…/create-a-collection` |
+| Collections are **not auto-displayed**; they need a Featured/Collection-List section | `help.fourthwall.com/…/create-a-collection` |
+| `available: false` ≈ sold-out, **not** unlisted *(inference)* | `help.fourthwall.com` lists "marked as sold out" as a separate toggle |
+| **Rate limits: `POST /products` and `/customizations` = 5/min; `/media/upload-url` = 20/min; default 100/10s** | `docs.fourthwall.com/guides/rate-limiting` |
+| 429 body is `OPEN_API_TOO_MANY_REQUESTS` | same |
+| MCP at `mcp.fourthwall.com`, OAuth 2.0, read+write, all plans | `docs.fourthwall.com/ai/mcp`; `help.fourthwall.com/…/connect-ai-assistants-to-fourthwall-with-mcp` |
+| MCP adds `update-offer`, `update-offer-slug`, `bulk-update-offer-variant-prices`, `update-collection-state` | MCP tool reference, `docs.fourthwall.com/ai/mcp` |
+| MCP tool **parameters are not documented**; server returns 401 without OAuth | `POST https://mcp.fourthwall.com` → 401 + `WWW-Authenticate: Bearer resource_metadata=…` |
+| MCP docs launched Apr 2026; write tools Jun 2026 | `docs.fourthwall.com/guides/changelog` |
+| Eli Actions performs bulk visibility changes | `help.fourthwall.com/…/eli-ai-actions` (updated 2026-05-27) |
+| Eli documented as **Pro**, contradicting the marketing FAQ | same, vs `fourthwall.com/ai-assistant-eli` |
+| ChatGPT & Claude app: *"Create a t-shirt with this design"* | `docs.fourthwall.com/ai/ai-app` (Jul 2026) |
+| Title/description generator | `help.fourthwall.com` (2026-05-01) |
+| Adobe Express in Product Designer | `help.fourthwall.com` (2026-08-07) |
+| "Create design products" is labelled **Beta** | `docs.fourthwall.com/guides/changelog` (May 2026) |
+| Write ops require Manager or Super Admin | `docs.fourthwall.com/ai/mcp` |
+| **The Storefront API documents no visibility filter; `GET /v1/collections` "Returns all collections"; only `all` is documented as public-only; products carry `access`** | `open-api-docs/storefront.json`; `docs.fourthwall.com/storefront/products` |
+| `GET /product-templates/page/{page}` is 1-indexed with no page-size param | `open-api.json`; docs |
+| Template summary `thumbnail` is imgproxy-generated and **not durable** | docs |
+| `placementStrategy` ∈ `AUTO`/`FILL_ALL`/`FULL_REGION`/`PLACEMENT_ID`; `AUTO` falls back to fill-all for mugs/stickers | `open-api.json` → `ProductDesignRegionV1`; create-design-products guide |
+| Media flow: presigned URL (~6h) → PUT to GCS → register → `imageId`; formats and size limit **not documented** | `docs.fourthwall.com/guides/create-design-products` |
+| Shop id, collection ids, product records | `GET /open-api/v1.0/shops/current`, `/collections`, `/products` (2026-10-01) |
+| 4 of 42 `Available` artworks clear 1500px | `lib/fourthwall/rory-artworks-data.json`; reproduces `stack/artwork-catalogue.md` |
+| The 10 chosen artworks are all `Available`, JPEG, 2100px wide | same file, measured 2026-10-02 |
+| 6 of the 10 fail the gate by 1.6–6.7% | same file: 1476, 1474, 1469, 1467, 1440, 1400 |
+| `greetings-from-austin` is `Sold` at 576×376 | same file |
+| Shop is `PASSWORD_PROTECTED`; `/checkout` is ungated | `fourthwall.md` §5 (**T14**) |
+| The script's `api()` helper is `GET \| POST` only | `scripts/publish-merch-to-fourthwall.ts:148` |
+| `evaluateArtworkForMerch` gates on `min(width,height)` | `lib/fourthwall/merch.ts:67-100` |
+| DTG/DTFx/embroidery documented as requiring PNG transparency | `lib/fourthwall/merch.ts:33-38` |
+| A mug area is 2700×1050 @300 DPI | `fourthwall.md` §4 (**T08**) |
+| `getCollections()` appends any Fourthwall collection not in the taxonomy | `lib/fourthwall/index.ts:353-356` (**T04**) |
+| Template list is mutable; `total: 601` is platform-wide | **T07** |
+| No wall-art template | **T13** |
+| The 25-template inventory with ids and base costs | 2026-10-01 revision of this document, §1.4 |
+
+---
 
 ## Appendix B — Documentation to update
 
 | Document | Change | When |
 | :--- | :--- | :--- |
-| `docs/releases/plans/README.md` | **Create** — there is no plan index today; list PR #2 and this document with status and blocking question | With this PR |
-| `README.md` | The Fourthwall template's own text: `pnpm install` (the repo uses npm), and a "Getting started" that assumes a template store rather than this shop | v0.2.0 |
-| `lib/docs-content.ts` | Public `/docs` describes the unfulfillable taxonomy; reconcile with §2.2 | v0.2.0 |
-| `lib/brand-config.ts` | Roadmap version labels (OQ1) | v0.2.0 |
-| `CHANGELOG.md` | Does not exist. Create it at the first tagged release, or keep the release record in `docs/releases/` | v0.2.0 |
+| `traps/register.md` **T03** | Still true for product *fields*, but **narrow it** — `PUT /products/{id}/state` and `/availability` exist. | This release |
+| `traps/register.md` **T04** | **Stale.** `PUT /collections/{collectionId}` exists and takes `name`/`description`. The orphan risk stands; the *"cannot be renamed"* claim does not. | This release |
+| `traps/register.md` | **Four new entries**: (1) `HIDDEN` is still purchasable by direct URL; (2) `PRIVATE` is unreachable from the Platform API; (3) a collection's state cannot be set by the Platform API; (4) **`POST /products` is 5/min** — a naive 40-product loop will half-complete. | This release |
+| `traps/register.md` | **Two more from the 2026-10-02 image pass**: (5) **a catalogue `image.url` can be a dead placeholder** — a `/v1/` upload-version segment 404s 9/9 times while real version ids resolve 128/128, so *"the record exists"* does not mean *"the image exists"*; (6) **the CDN copy is a lossy re-encode** (q85 vs the q98 master), so *"same pixels"* on a dimension check does not mean *"same print quality"*. | This release |
+| `traps/register.md` **T05–T11** | Unchanged — all still reproduce. | — |
+| `stack/fourthwall.md` §3 | Narrow the *"no update endpoint"* claim; add `/state` and `/availability` and the four-state access model. | This release |
+| `stack/fourthwall.md` §3.3 | Correct the *"name, description and visibility cannot be changed"* claim. | This release |
+| `stack/fourthwall.md` §3.4 | Correct the *"no draft state to hide behind"* reasoning — the dashboard creates collections `Hidden`. | This release |
+| `stack/fourthwall.md` §6 | **Flag the unverified claim** that the Storefront API does not serve `HIDDEN` items — it carries no evidence, and §2.7 shows it is load-bearing. Replace with the `T00` measurement. | **This release — highest priority** |
+| `stack/fourthwall.md` | Add: the rate-limit table, the official MCP server, the four-surface write matrix (§2.2), and the collection-visibility gap. | This release |
+| `stack/artwork-catalogue.md` | Add the per-region finding (**D4**): the gate is not merely a heuristic, it is the **wrong shape**. | This release |
+| `mcp/README.md` | Add Fourthwall's official MCP server to *"Servers that would genuinely fit"*, with the OQ2 verdict and the Apr/Jun 2026 dates. | This release |
+| `docs/releases/plans/README.md` | Re-register this document as re-scoped; update the *"What v0.2.0 actually requires"* table. | ✅ done in the re-scope |
+| `lib/fourthwall/merch.ts` | `FOURTHWALL_MIN_ACCEPTED_PX` becomes a warning threshold, not a gate (**D4**). | This release |
+| `lib/taxonomy.ts` | Add `everyday-carry` — if OQ3 resolves that way. | This release |
+| `docs/agentic/VERSION` + `CHANGELOG.md` | **MINOR** — new traps and corrected stack facts. | This release |
