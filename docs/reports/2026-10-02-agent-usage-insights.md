@@ -26,13 +26,17 @@
 - **Covers:** every CodeBuddy Code session recorded on this machine during the period — **48 sessions,
   28,697 messages**.
 - ⚠️ **Out of scope for this repository, but present in the source:** the report is generated from
-  **machine-wide** telemetry, so it describes work on **other projects and other clients**. Specifically,
-  it names an "Indigo / Call Indigo" marketing site, a Supabase-backed media/wayback pipeline, an S2 media
-  migration, a `v3.1.0` release, a G4 CI check, and an XSS-payload test suite — **none of which is this
-  repository.**
-- ⚠️ **This repository is public.** Committing this file publishes those references. **Decision pending** —
-  see [Recommendations](#recommendations). This is the first entry in the series and is the reason the
-  [report pattern](README.md#-cross-project-data) carries an explicit cross-project rule.
+  **machine-wide** telemetry, so it describes work on **other projects and other clients** — an unrelated
+  marketing site, a media/archive pipeline, a storage migration, and unrelated releases and CI checks.
+  **None of it is this repository.**
+- ✅ **Client, project, host and release names redacted 2026-10-02** (recommendation [R1](#recommendations),
+  option b). The generator named specific clients, projects, hosts and version numbers; those references are
+  now generic. **Public infrastructure names are kept** (GitHub, Supabase, Fourthwall, Git for Windows) —
+  naming a public SaaS is not client data, and the tooling examples have to stay runnable.
+  The redaction tool is **deliberately not committed**: it necessarily embeds the terms being removed, so
+  committing it would reinstate the leak it fixed. `git log` on this file is the record of the change.
+- ⚠️ **Every figure in this file is machine-wide, not this project's.** Redaction removes names, not
+  scope. Do not cite these numbers as this repository's numbers.
 
 ---
 
@@ -63,7 +67,7 @@
 
 | Area | Sessions |
 | :--- | :--- |
-| Indigo marketing site redesign and migration | ~12 |
+| Unrelated marketing-site redesign and migration | ~12 |
 | Release planning and documentation | ~10 |
 | CI, tooling and infrastructure fixes | ~9 |
 | Backup, storage and media pipeline | ~8 |
@@ -99,8 +103,9 @@
 | Friction category | Generator's examples |
 | :--- | :--- |
 | **Environment and sandbox interruptions** | A failed background `npm install` after wiping `node_modules`; a blocked install preventing lockfile verification; an OAuth device flow stalled by an empty `APPDATA`. |
-| **Stale local state and remote drift** | A misnamed branch that could not merge, forcing three edits to be re-applied; a stale checkout that had not shipped Phase 2; `v3.1.0` merged remotely while local `HEAD` was stale. |
-| **Overreliance on shell exploration** | 9,614 `Bash` vs 214 `Grep`. A colour evaluation needed computational rendering because earlier token review would have pre-empted it; a docs/wiki investigation pivoted after a test suite missed 4 of 12 XSS payloads. |
+| **Stale local state and remote drift** | A misnamed branch that could not merge, forcing three edits to be re-applied; a stale checkout that had not shipped Phase 2; an unrelated release merged remotely while local
+`HEAD` was stale. |
+| **Overreliance on shell exploration** | 9,614 `Bash` vs 214 `Grep`. A colour evaluation needed computational rendering because earlier token review would have pre-empted it; a docs/wiki investigation pivoted after a security test suite missed 4 of 12 payloads. |
 
 ### 5. Top tools and models
 
@@ -257,7 +262,7 @@ codebuddy mcp add github -- npx -y @modelcontextprotocol/server-github
 
 ### Task Agents — spawn focused sub-agents for exploration or parallel work
 
-**Why:** Many sessions are read-only reconnaissance (wayback archives, WP Migrate exports, repo audits)
+**Why:** Many sessions are read-only reconnaissance (archive crawls, CMS exports, repo audits)
 before writing plans. Delegating that exploration frees the main thread for implementation.
 
 > Use an agent to explore the codebase and report the true test count, open issues, and branch state before
@@ -366,7 +371,7 @@ plans, and opens corrective PRs without being asked.
 > CodeBuddy's probes accidentally destroyed git refs — then it carefully restored them and confirmed the
 > exact same bug happens in stock Git for Windows.
 >
-> While reproducing a nested-git-ref bug in the wayback pipeline (nested refs with absent parent
+> While reproducing a nested-git-ref bug in an unrelated data pipeline (nested refs with absent parent
 > directories fail 40/40, and git deletes the parent directory), the agent's own test probes destroyed the
 > refs, so it restored them before continuing. It then proved the system Git for Windows fails identically,
 > isolating the upstream mechanism — though cleanup kept getting interrupted by the sandbox.
@@ -381,7 +386,7 @@ destructive, the damage was real, and **nothing threw**.
 
 | # | Action | Why |
 | :-- | :--- | :--- |
-| R1 | **Decide whether to commit this file.** It names other clients and projects and this repo is public. Options: (a) keep it local and gitignored, (b) commit with the cross-project names removed, (c) commit as-is. | The report pattern's own rule says a report must be scoped or not committed. |
+| R1 | ✅ **RESOLVED 2026-10-02 — option (b).** Committed with client, project, host and release names removed. | The report pattern's own rule says a report must be scoped or not committed. Redacting rather than dropping keeps the process findings — which are the point of the report and are not client-specific. |
 | R2 | **Scope future reports to this repository.** Generate from this project's sessions only, so the series is usable and publishable. | A machine-wide report cannot be a repo artifact. |
 | R3 | Adopt the **session preflight** recommendation — it is already implemented, in a form that fits this repo: [`../agentic/scripts/preflight.sh`](../agentic/scripts/preflight.sh). | Recommendation 2 is already satisfied; no new work needed. |
 | R4 | Adopt **measure-before-you-claim** as a written rule. | Already encoded in [`../agentic/protocols/verification.md`](../agentic/protocols/verification.md). |

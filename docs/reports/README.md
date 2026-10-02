@@ -70,7 +70,7 @@ the first entry's Scope section for the pattern.
 
 | Date | Report | Covers | Status |
 | :--- | :--- | :--- | :--- |
-| 2026-10-02 | [Agent usage insights](2026-10-02-agent-usage-insights.md) | 2026-09-14 → 2026-10-02, **all projects on this machine** | ⚠️ Cross-project data — commit decision pending |
+| 2026-10-02 | [Agent usage insights](2026-10-02-agent-usage-insights.md) | 2026-09-14 → 2026-10-02, **all projects on this machine** | ✅ Cross-project names redacted 2026-10-02 — figures remain machine-wide |
 
 ## Template
 

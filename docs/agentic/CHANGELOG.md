@@ -98,10 +98,11 @@ This file tracks the **KB**, not the application. The application's release reco
 
 ### Notes
 
-- **The first report carries cross-project data and its commit decision is pending** (recommendation R1 in
-  the report). It names an unrelated marketing site, a Supabase/wayback media pipeline, and a `v3.1.0`
-  release — none of which is this repository. It was written faithfully rather than redacted, so the
-  decision is made with the real content in view.
+- **The first report carries machine-wide data, and it has been redacted** (recommendation R1 in the
+  report, resolved 2026-10-02 as option **(b)**). It described an unrelated marketing site, a media/archive
+  pipeline, and an unrelated release — none of which is this repository. Client, project, host and release
+  names were removed; public infrastructure names were kept so the tooling examples stay runnable. The
+  figures remain **machine-wide** and are labelled as such.
 - **Two figures in the first report are flagged as unreliable** rather than reproduced as fact: the
   generator's "312 active hours" contradicts its own session-duration data, and most headline numbers are
   the generator's arithmetic, not re-derived. The report marks exactly two figures as verified — this

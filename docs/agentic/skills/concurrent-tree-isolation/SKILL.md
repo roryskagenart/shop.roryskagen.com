@@ -119,12 +119,12 @@ npm run lint                      # the real gate — catches the above
 npm run lint -- src tests scripts # scoped — will NOT catch it
 ```
 
-Fix by pointing the scratch `cacheDir` **outside the tree** (`../indigo-preview-cache`), then
+Fix by pointing the scratch `cacheDir` **outside the tree** (`../preview-cache`), then
 **`mv` the existing cache out** rather than deleting it — one rename avoids the bulk-delete cap and
 keeps the warm cache:
 
 ```bash
-mv .preview-cache ../indigo-preview-cache   # NOT rm -rf: capped per turn, and needless
+mv .preview-cache ../preview-cache   # NOT rm -rf: capped per turn, and needless
 ```
 
 The same principle applies to any generated output a scratch config writes: **never let a scratch
