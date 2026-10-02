@@ -405,6 +405,21 @@ destructive, the damage was real, and **nothing threw**.
 > The only two rows marked verified are the ones measured directly against this repository. Everything
 > else is the generator's arithmetic, reproduced without independent confirmation.
 
+### Correction — one suggested command is not runnable here
+
+The **Headless Mode** card suggests `codebuddy -p "..."`. **No such CLI is installed on this machine.**
+Measured 2026-10-02: `command -v codebuddy` / `codebuddy-code` / `wb` all return nothing, and the install
+directory contains an Electron desktop app (`WorkBuddyAI.exe`), not a CLI entry point.
+
+The example is a generic illustration from the generator, not a command verified against this
+environment. **Do not paste it and expect it to work.** Treat every `example_code` block in this report the
+same way — none was executed.
+
+Also note: **an agent session is started from the application UI, not from a shell.** The integrated
+terminal is a terminal inside the app for running commands; it does not start a session. Running the
+preflight is therefore something you do *inside* a session — or by asking the agent to run it as its first
+action — not a way to begin one.
+
 ---
 
 *Source: `CodeBuddy Code Insights`, generated 2026-10-02. Converted to Markdown for the
