@@ -419,7 +419,7 @@ report the same way — none was executed.
 
 | Probe | Result |
 | :--- | :--- |
-| `command -v claude` | `/c/Users/jaden.black/.local/bin/claude` — **Claude Code `2.0.35`**, 217 MB binary |
+| `command -v claude` | `~/.local/bin/claude` — **Claude Code `2.0.35`**, 217 MB binary |
 | `claude --help` | `Usage: claude [options] [command] [prompt]` — interactive by default, `-p/--print` for non-interactive |
 
 So "no agent CLI exists here" is wrong; the accurate statement is **"no WorkBuddy CLI exists here, but

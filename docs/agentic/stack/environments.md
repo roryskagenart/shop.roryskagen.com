@@ -106,7 +106,7 @@ not to be a CLI): `PortableGit/versions`, `node/versions/22.22.2-3`, `python/ver
 
 | Probe | Result |
 | :--- | :--- |
-| `command -v claude` | `/c/Users/jaden.black/.local/bin/claude` — **Claude Code `2.0.35`** |
+| `command -v claude` | `~/.local/bin/claude` — **Claude Code `2.0.35`** |
 | `claude --help` | Interactive by default; `-p/--print` for non-interactive; `--agents <json>`, `--settings`, `--add-dir` |
 | `grep -c "CLAUDE.md" <binary>` | **82** |
 | `grep -c "AGENTS.md" <binary>` | **0** |

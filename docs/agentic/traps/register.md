@@ -386,7 +386,7 @@ one was made and published in this repo's own report before it was caught.
 **Evidence:** The first version of
 [`../../reports/2026-10-02-agent-usage-insights.md`](../../reports/2026-10-02-agent-usage-insights.md)
 asserted **"No such CLI is installed on this machine."** Re-probing a *wider* set found
-`claude` → `/c/Users/jaden.black/.local/bin/claude`, **Claude Code `2.0.35`**. The original claim was
+`claude` → `~/.local/bin/claude`, **Claude Code `2.0.35`**. The original claim was
 defensible about `codebuddy` and wrong about the machine.
 **Do instead:** State the scope you measured, not the conclusion you inferred — *"no WorkBuddy CLI is
 installed"* rather than *"no CLI is installed"*. When the assertion is a **negative about a category**,
