@@ -40,6 +40,12 @@ frontmatter.
 | [`vercel-account-migration`](vercel-account-migration/SKILL.md) | A Vercel project moved between accounts, or a freshly imported project builds but serves empty pages. **This repo completed that migration** — see [`../stack/environments.md`](../stack/environments.md). |
 | [`sandbox-vs-machine-anomaly`](sandbox-vs-machine-anomaly/SKILL.md) | A filesystem or git anomaly needs triage: real machine defect, sandbox artifact, or damage the agent's own tooling just caused? **Decide before diagnosing or changing config.** |
 
+### Fourthwall catalog
+
+| Skill | Use when |
+| :--- | :--- |
+| [`fourthwall-product-catalog`](fourthwall-product-catalog/SKILL.md) | You need the **full 605-template sellable catalog** (not just this shop's published subset), the admin "create product" gallery facets mapped to API fields, or the canonical `catalog_full.csv` / `catalog_summary.json` / `fourthwall-full-catalog.md` artifacts. Covers the public no-login path-paginated pull and the `regionId`-vs-`placementId` create trap. **Source of truth for the products-launcher** (see `docs/releases/prd_fw-products-launcher.md`). |
+
 ### Verification
 
 | Skill | Use when |
