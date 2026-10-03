@@ -17,8 +17,8 @@
 
 set -uo pipefail
 
-BASELINE_TESTS=97
-BASELINE_FILES=6
+BASELINE_TESTS=137
+BASELINE_FILES=11
 FAILED=0
 
 head_() { printf '\n== %s\n' "$*"; }
@@ -101,26 +101,33 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Format (advisory)
+# 3. Format (advisory, OPT-IN ONLY via --format)
 # ---------------------------------------------------------------------------
+#
+# Removed from the default path deliberately. Measured: prettier over the tree
+# costs ~4s - half the total gate runtime - to re-report a number that has been
+# static since 2026-10-02 (91 of 103 tracked files fail). It is not in CI, it
+# cannot fail the build, and its only output was a standing INFO line nobody
+# acted on. Run it when you have actually touched formatting:
+#
+#   bash docs/agentic/scripts/verify.sh --format
+#
+# The rule it was documenting still stands: format the files you touched
+# (`prettier --write <paths>`), never a repo-wide --write as a drive-by. T31.
 
-head_ "3. Format - prettier (advisory, BASELINE IS ALREADY DIRTY)"
+if [ "${1:-}" = "--format" ] || [ "${VERIFY_FORMAT:-0}" = "1" ]; then
+  head_ "3. Format - prettier (opt-in)"
 
-if [ -x ./node_modules/.bin/prettier ]; then
-  # Measured 2026-10-02: 91 of 103 tracked files fail this check at HEAD.
-  # `npm run prettier:check` has therefore never been a usable gate in this repo.
-  # It is reported here for information only - do NOT treat it as a failure, and
-  # do NOT run a repo-wide `prettier --write` as a drive-by (it produces a diff
-  # touching most of the tree). See traps/register.md T31.
-  if ./node_modules/.bin/prettier --check --ignore-unknown . >/dev/null 2>&1; then
-    ok "prettier clean (this would be new - the baseline is 91 failing files)"
+  if [ -x ./node_modules/.bin/prettier ]; then
+    if ./node_modules/.bin/prettier --check --ignore-unknown . >/dev/null 2>&1; then
+      ok "prettier clean"
+    else
+      printf '  INFO  prettier reports unformatted files. Pre-existing baseline, not your change.\n'
+      printf '        Format only the files you touched: prettier --write <paths>\n'
+    fi
   else
-    printf '  INFO  prettier reports unformatted files. Baseline at HEAD was 91 of 103 tracked\n'
-    printf '        files, so this is pre-existing, not caused by your change. Format only the\n'
-    printf '        files you touched: prettier --write <paths>\n'
+    printf '  WARN  prettier not installed - skipped\n'
   fi
-else
-  printf '  WARN  prettier not installed - skipped\n'
 fi
 
 # ---------------------------------------------------------------------------

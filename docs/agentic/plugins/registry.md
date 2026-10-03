@@ -11,6 +11,9 @@ to production are dangerous. This registry records the **blast radius** of each 
 
 | Extension | Kind | Purpose here | Blast radius |
 | :--- | :--- | :--- | :--- |
+| **Fourthwall MCP** | MCP server (OAuth) | Catalogue reads and writes via `mcp.fourthwall.com`. | ⚠️⚠️ **WRITES PRODUCTION.** Product, collection and variant mutations. Same blast radius as the HTTP API in `scripts/` — see T02. |
+| **Vercel MCP** | MCP server (OAuth) | Project info, env vars, deployment status via `mcp.vercel.com`. | ⚠️ Env-var writes affect the deployed app. Deploy/promote remains forbidden — rule 1. |
+| **Cloudinary MCP** | MCP server (OAuth) | Image asset upload/transform/delete. | ⚠️ **Deletes are not reversible.** A deleted asset breaks live product imagery. |
 | **GitHub connector** | Connector | Read issues, PRs, checks and commit statuses for `roryskagenart/shop.roryskagen.com`. | **Read-only in practice.** The underlying actor (`jadenblack`) has push, but this project's rule is that pushes require explicit per-release approval. |
 | **Vercel CLI** | CLI (not a plugin) | `env ls` / `env pull`, `deploy --dry --json`, `whoami`, `link`. | ⚠️ **`deploy` publishes production.** Only ever run with `--dry` unless a human approved a deploy. |
 | **`gh` CLI** | CLI (not a plugin) | Repo, PR, secret and variable operations. | ⚠️ `gh secret set` / `gh variable set` succeed here (`admin: false` does not block them). Treat as a write. |
@@ -22,9 +25,13 @@ to production are dangerous. This registry records the **blast radius** of each 
 
 | Not installed | Why not |
 | :--- | :--- |
-| Fourthwall MCP server | None exists. The integration is plain `fetch`/`curl` against the two documented hosts — see [`../stack/fourthwall.md`](../stack/fourthwall.md). |
 | Supabase MCP server | Supabase belongs to the **separate Studio site project**, not this shop. Do not conflate them. |
-| Any MCP server at all | The runtime's MCP configuration was **empty** at migration time. See [`../mcp/README.md`](../mcp/README.md). |
+| GitHub MCP server | `gh` CLI plus the git credential already cover PR/issue/check reads, and the CLI's token scope is visible. A second path to the same data is more surface, not less. |
+| Playwright / browser MCP server | The agent already has browser tooling. The password-gate finding was produced by a direct probe. |
+
+> **Superseded 2026-10-03.** This table previously listed "Any MCP server at all" as absent. That is no
+> longer true — Fourthwall, Vercel and Cloudinary are configured on the `rory` profile. See
+> [`../mcp/README.md`](../mcp/README.md) for the current state and the write-capability warning.
 
 ## Adding a plugin
 

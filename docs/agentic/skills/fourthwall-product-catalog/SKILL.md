@@ -42,7 +42,7 @@ catalog ingest; the launcher's acceptance test re-derives them and must match.
 
 `fourthwall-product-schema.md` (in this skill's `references/` parent history / `.workbuddy-ai/tmp`) holds
 the **create** schema. For the two-API architecture and the live write surface, read
-[`../../../stack/fourthwall.md`](../../../stack/fourthwall.md) and
+[`../../stack/fourthwall.md`](../../stack/fourthwall.md) and
 [`../../../../lib/fourthwall/AGENTS.md`](../../../../lib/fourthwall/AGENTS.md) first.
 
 ---

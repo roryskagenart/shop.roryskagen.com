@@ -94,8 +94,8 @@ explicitly** — do not let a release name drift between them.
 
 | | |
 | :--- | :--- |
-| Test files | **6** |
-| Tests | **97 passing** |
+| Test files | **11** |
+| Tests | **137 passing** |
 | Baseline verified | 2026-10-02, `tsc --noEmit` 0 errors |
 
 Test files:

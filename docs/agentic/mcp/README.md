@@ -7,12 +7,30 @@ configured for this project, and — more importantly — **what is not configur
 
 ## Current state
 
-**No MCP server is configured for this project.** The runtime's MCP configuration was empty at migration
-time. This is a deliberate baseline, not an oversight: every server added is a capability with a blast
-radius, and none was needed.
+**Three MCP servers are configured on the `rory` Hermes profile** (measured 2026-10-03). This section
+previously said no MCP server was configured — that was true at migration time and stopped being true when
+the servers below were added. Corrected 2026-10-03.
 
-The integration work this project does — Fourthwall, Vercel, GitHub — is done with documented HTTP and
-first-party CLIs, which are auditable and leave no standing capability behind.
+| Server | Endpoint | Auth | What it can do here |
+| :--- | :--- | :--- | :--- |
+| **Fourthwall** | `https://mcp.fourthwall.com` | OAuth | Reads the catalogue. **Also writes** — products, collections, variants. |
+| **Vercel** | `https://mcp.vercel.com` | OAuth | Project, env vars, deployment status. |
+| **Cloudinary** | `https://asset-management.mcp.cloudinary.com/mcp` | OAuth | Image assets: upload, transform, delete. |
+
+Configured in `~/.hermes/profiles/rory/config.yaml` under `mcp_servers`. They are **user-scoped and
+machine-local** — not committed here, because they carry OAuth tokens.
+
+> ⚠️ **The Fourthwall MCP can write to production.** Every restriction in
+> [`../protocols/destructive-actions.md`](../protocols/destructive-actions.md) and `AGENTS.md` rule 5 applies
+> to it with full force. An MCP tool call is not safer than a hand-written `curl` — it is the same production
+> write with a friendlier syntax. **Do not use it to probe or delete a live resource.** T02 records what a
+> single exploratory `DELETE` cost.
+
+### Effect on the guidance below
+
+Rule 2 ("prefer read-only") and rule 4 ("know the blast radius") are now load-bearing rather than
+hypothetical. A server that *can* write to Fourthwall is installed, so scope and discipline are the only
+things standing between a tool call and another archived product.
 
 ## Where configuration lives
 

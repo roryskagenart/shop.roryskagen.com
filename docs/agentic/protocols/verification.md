@@ -10,11 +10,29 @@
 | Gate | Command | Baseline |
 | :--- | :--- | :--- |
 | Typecheck | `./node_modules/.bin/tsc --noEmit` (alias `npm run lint`) | 0 errors |
-| Tests | `./node_modules/.bin/vitest run` (alias `npm test`) | **97 passed / 6 files** |
-| Format | `npm run prettier:check` | advisory |
+| Tests | `./node_modules/.bin/vitest run` (alias `npm test`) | **137 passed / 11 files** |
+| Format | `prettier --check` — **opt-in only**, see below | advisory |
 | CI | `.github/workflows/ci.yml` → `npm ci`, lint, test | must be green |
 
-One command: [`../scripts/verify.sh`](../scripts/verify.sh).
+One command: [`../scripts/verify.sh`](../scripts/verify.sh). Measured 2026-10-03: **3.9 s**, down from
+8.0 s — it runs typecheck, tests, and the baseline count, nothing else.
+
+### Format is not in the default path
+
+`verify.sh` runs **no** prettier check unless you ask:
+
+```bash
+bash docs/agentic/scripts/verify.sh            # typecheck + tests + baseline  (3.9 s)
+bash docs/agentic/scripts/verify.sh --format   # also checks formatting        (8.0 s)
+```
+
+This is a cost decision, not a correctness one. Prettier over the tree cost **~4 s — half the total gate
+runtime** — to re-report a number that has been static since 2026-10-02 (91 of 103 tracked files fail). It
+is not in CI, so it cannot fail a build, and its only output was a standing INFO line that nobody acted
+on. Check it when you have actually touched formatting; skip it otherwise.
+
+The rule it was documenting still stands: **`prettier --write <paths>` on the files you touched**, never a
+repo-wide `--write` as a drive-by. → T31
 
 ---
 
@@ -43,12 +61,17 @@ stdout is not a TTY. Silence therefore proves neither success nor failure.
 
 ## Counts move — re-derive them
 
-Documented test counts in this repo have been wrong repeatedly (67 vs 127; 151 vs 152). **A count is a
-measurement, not a constant.** When the denominator changes, every "N of M" claim elsewhere in the docs
-needs re-checking.
+Documented test counts in this repo have been wrong repeatedly (67 vs 127; 97 vs 137; 151 vs 152). **A
+count is a measurement, not a constant.** When the denominator changes, every "N of M" claim elsewhere in
+the docs needs re-checking.
+
+This happened for real: `verify.sh` carried `BASELINE_TESTS=97` while the suite ran 137, so **the gate
+failed on a clean tree** and the failure text ("a DROP means a guard was deleted") pointed at the opposite
+of the truth. Baseline re-derived and fixed 2026-10-03.
 
 Corollary: a **drop** in the test count means a guard was deleted, not that the suite got faster. Treat it
-as a failure until proven otherwise.
+as a failure until proven otherwise — but re-derive first, because a stale baseline looks identical to a
+deleted guard from the failure message alone.
 
 ---
 

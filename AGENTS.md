@@ -66,9 +66,10 @@ CI (`.github/workflows/ci.yml`, the only workflow) runs `npm ci` → `npm run li
 > Next suppresses its progress spinner on a non-TTY pipe — so silence proves nothing. Do not read it as
 > success *or* failure. → T16
 
-> **`npm run prettier:check` has never been green** — it fails on 91 of 103 tracked files and is not in
-> CI. Advisory only. Run `prettier --write <paths>` on files you touched; a repo-wide `--write` as a
-> drive-by rewrites most of the tree and buries your change. → T31
+> **`npm run prettier:check` is advisory and opt-in.** It has never been green (91 of 103 tracked files) and
+> is not in CI. `verify.sh` does not run it unless you pass `--format`, because it costs ~4 s — half the
+> gate — to re-report a static number. Use `prettier --write <paths>` on files you touched; a repo-wide
+> `--write` as a drive-by rewrites most of the tree and buries your change. → T31
 
 Full protocol: [`docs/agentic/protocols/verification.md`](docs/agentic/protocols/verification.md).
 
@@ -125,14 +126,19 @@ Full protocol: [`docs/agentic/protocols/verification.md`](docs/agentic/protocols
 
 - **Hermes profile `rory`** (`~/.hermes/profiles/rory/config.yaml`) is the runtime this repo is worked
   from. `skills.trusted_project_dirs` and `lsp.trusted_workspaces` already include
-  `/home/jadenblack/Desktop/dev.local/roryskagenart`, so repo skills load without a prompt.
+  `/home/jadenblack/Desktop/dev.local/roryskagenart/shop.roryskagenart.com`, so repo skills load without a prompt.
 - **MCP servers are enabled**: Fourthwall (`mcp.fourthwall.com`), Vercel, and Cloudinary — all OAuth.
-  This **supersedes** `docs/agentic/mcp/README.md` and the "Explicitly absent" table in
-  `docs/agentic/plugins/registry.md`, which still say no MCP server is configured. Update those two files
-  when you touch them. Rule 5 applies with full force: **the Fourthwall MCP can write to production.**
-- **Model/provider**: `stealth/space-bunny-alpha` via `nous`. Toolsets include `browser`, `terminal`,
-  `delegation`, `kanban`, `memory`, `skills`, `vision`, `web` — enough that an in-repo `delegate_task` or a
-  kanban card is the right shape for parallel work here, not serial tool calls.
+  [`docs/agentic/mcp/README.md`](docs/agentic/mcp/README.md) and the "Registered" table in
+  [`docs/agentic/plugins/registry.md`](docs/agentic/plugins/registry.md) were corrected on 2026-10-03 to
+  match; both previously claimed no MCP server was configured. Rule 5 applies with full force: **the
+  Fourthwall MCP can write to production.**
+- **Model/provider**: **`gemini-3.5-flash` via `gemini`** (Google AI Studio, free tier), as of 2026-10-03.
+  It was `stealth/space-bunny-alpha` via `nous` before. Verified: tool-calling passes, ~88k-token context
+  accepted, subagent delegation pinned to `gemini-3.1-flash-lite`. Fallback chain is OpenRouter free
+  (`qwen/qwen3.8-27b:free`, `nvidia/nemotron-3-super-120b-a12b:free`) then HuggingFace
+  (`Qwen/Qwen2.5-Coder-32B-Instruct`) — all verified working at zero credit.
+  ⚠️ Gemini free tier returns **503 "high demand"** under load; that is transient, not a quota verdict.
+  Toolsets include `browser`, `terminal`, `delegation`, `kanban`, `memory`, `skills`, `vision`, `web`.
 - **Skills are user-scoped, not repo-scoped.** `~/.hermes/profiles/rory/skills/` plus this repo's
   `docs/agentic/skills/`. Copying a skill between runtimes is a migration, not a move.
 - **Claude Code does not read `AGENTS.md`** — the string does not occur in its binary. A `claude` session
